@@ -10,6 +10,10 @@ import Orders from "./pages/Orders";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Pricing from "./pages/Pricing";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
+
 
 function App() {
   return (
@@ -63,6 +67,33 @@ function App() {
           element={
             <ProtectedRoute>
               <Orders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/pricing"
+          element={
+            <ProtectedRoute>
+              <Pricing />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/terms"
+          element={
+            <ProtectedRoute>
+              <Terms />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/contact"
+          element={
+            <ProtectedRoute>
+              <Contact />
             </ProtectedRoute>
           }
         />

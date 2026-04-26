@@ -521,29 +521,7 @@ a:hover {
   top: 0;
 }
 
-.user-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #dbeafe;
-  color: #2563eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
 .sidebar-nav a,
 .sidebar-nav button {
@@ -565,7 +543,38 @@ a:hover {
   background: #eaf2ff;
   color: #2563eb;
 }
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
 
+.user-box .avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e8f0ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-info {
+  min-width: 0;
+}
+
+.user-info h6 {
+  max-width: 130px;
+}
+
+.sidebar-nav a.active {
+  background: #eaf2ff;
+  color: #2563eb;
+  font-weight: 600;
+}
 .mobile-menu-btn {
   position: fixed;
   top: 15px;
