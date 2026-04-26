@@ -7,39 +7,41 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleLogin(e) {
     e.preventDefault();
 
-    const cleanEmail = email.trim().toLowerCase();
+    setLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
+      email: email.trim().toLowerCase(),
       password,
     });
 
     if (error) {
+      setLoading(false);
       alert(error.message);
       return;
     }
 
-    const user = data.user;
-
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", data.user.id)
       .single();
+
+    setLoading(false);
 
     if (profileError) {
       console.error("Profile fetch error:", profileError.message);
-      alert("Login successful, but profile was not found. Please contact admin.");
+      alert("Profile not found. Please contact admin.");
       await supabase.auth.signOut();
       navigate("/login");
       return;
     }
 
-    if (profile?.role === "admin") {
+    if (profile?.role?.trim().toLowerCase() === "admin") {
       navigate("/admin");
     } else {
       navigate("/dashboard");
@@ -81,8 +83,12 @@ function Login() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-100 mt-2">
-            Login
+          <button
+            type="submit"
+            className="btn btn-primary w-100 mt-2"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
