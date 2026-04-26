@@ -600,6 +600,25 @@ a:hover {
     padding-top: 70px;
   }
 }
+
+.mobile-menu-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 900;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 999;
+}
+
+.user-sidebar {
+  z-index: 1000;
+}
+
 /*admin panel */
 /*admin panel*/
 /*admin panel*/
@@ -607,6 +626,26 @@ a:hover {
 /*admin panel*/
 /*admin panel*/
 
+/* Default sidebar */
+.admin-sidebar {
+  width: 80px;
+  min-height: 100vh;
+}
+
+/* Mobile fix */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 56px;
+  }
+
+  .admin-content {
+    padding: 16px 12px !important;
+  }
+
+  .admin-content h3 {
+    font-size: 24px;
+  }
+}
 .admin-page {
   min-height: 100vh;
   background: #f5f7fb;

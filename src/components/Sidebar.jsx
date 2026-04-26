@@ -30,12 +30,14 @@ function Sidebar() {
   return (
     <>
       {/* Mobile menu button */}
-      <button
-        className="btn btn-light shadow-sm mobile-menu-btn d-md-none"
-        onClick={() => setShowSidebar(true)}
-      >
-        <FiMenu size={22} />
-      </button>
+      {!showSidebar && (
+        <button
+          className="btn btn-light shadow-sm mobile-menu-btn d-md-none"
+          onClick={() => setShowSidebar(true)}
+        >
+          <FiMenu size={22} />
+        </button>
+      )}
 
       {/* Overlay */}
       {showSidebar && (
@@ -49,7 +51,8 @@ function Sidebar() {
       <div className={`user-sidebar ${showSidebar ? "show" : ""}`}>
         <div className="d-flex justify-content-between align-items-center mb-4 d-md-none">
           <h5 className="mb-0">Menu</h5>
-          <button className="btn btn-sm" onClick={closeSidebar}>
+
+          <button className="btn btn-sm btn-light" onClick={closeSidebar}>
             <FiX size={22} />
           </button>
         </div>

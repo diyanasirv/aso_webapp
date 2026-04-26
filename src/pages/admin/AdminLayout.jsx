@@ -18,16 +18,15 @@ function AdminLayout() {
 
   return (
     <div className="d-flex min-vh-100">
-      
+
       {/* Sidebar */}
       <div
-        className="bg-dark text-white d-flex flex-column align-items-center py-3"
-        style={{ width: "80px" }}
+        className="bg-dark text-white d-flex flex-column align-items-center py-3 admin-sidebar"
       >
         <h5 className="mb-4">A</h5>
 
         <div className="d-flex flex-column align-items-center gap-4 flex-grow-1">
-          
+
           <Link to="/admin" className="text-white">
             <FiHome size={20} />
           </Link>
@@ -56,9 +55,10 @@ function AdminLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow-1 bg-light p-4">
+      <div className="flex-grow-1 bg-light p-4 admin-content">
         <Outlet />
       </div>
+
     </div>
   );
 }

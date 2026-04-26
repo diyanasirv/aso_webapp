@@ -7,17 +7,30 @@ function Signup() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agree, setAgree] = useState(false);
 
   async function handleSignup(e) {
     e.preventDefault();
 
-    const { error } = await supabase.auth.signUp({
+    if (!agree) {
+      alert("Please agree to Terms & Conditions");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
     if (error) {
       alert(error.message);
+      return;
+    }
+
+    // 🔥 Check if user already exists
+    if (data?.user?.identities?.length === 0) {
+      alert("User already exists. Please login.");
+      navigate("/login");
       return;
     }
 
@@ -40,25 +53,40 @@ function Signup() {
               <input
                 type="email"
                 className="form-control"
-                id="email"
-                placeholder="name@example.com"
+                placeholder="Email"
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <label htmlFor="email">Email address</label>
+              <label>Email address</label>
             </div>
 
             {/* Password */}
-            <div className="form-floating mb-4">
+            <div className="form-floating mb-3">
               <input
                 type="password"
                 className="form-control"
-                id="password"
                 placeholder="Password"
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <label htmlFor="password">Password</label>
+              <label>Password</label>
+            </div>
+
+            {/* Terms checkbox */}
+            <div className="form-check mb-3">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+                id="terms"
+              />
+              <label className="form-check-label small" htmlFor="terms">
+                I agree to{" "}
+                <Link to="/terms" className="text-decoration-none">
+                  Terms & Conditions
+                </Link>
+              </label>
             </div>
 
             <button className="btn btn-primary w-100 py-2 mb-3">
