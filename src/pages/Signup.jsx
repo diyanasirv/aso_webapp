@@ -11,7 +11,6 @@ function Signup() {
   const [lastName, setLastName] = useState("");
   const [country, setCountry] = useState("");
   const [agree, setAgree] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   async function handleSignup(e) {
     e.preventDefault();
@@ -20,13 +19,6 @@ function Signup() {
       alert("Please agree to Terms & Conditions");
       return;
     }
-
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters");
-      return;
-    }
-
-    setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -39,14 +31,13 @@ function Signup() {
       },
     });
 
-    setLoading(false);
-
     if (error) {
+      // This is the ONLY correct way to detect errors
       alert(error.message);
       return;
     }
 
-    alert("Account created successfully! Please login.");
+    alert("Signup successful. Please login.");
     navigate("/login");
   }
 
@@ -59,7 +50,7 @@ function Signup() {
 
           <form onSubmit={handleSignup}>
 
-            {/* Name */}
+            {/* First + Last Name */}
             <div className="row">
               <div className="col-md-6 mb-3">
                 <div className="form-floating">
@@ -149,11 +140,8 @@ function Signup() {
               </label>
             </div>
 
-            <button
-              className="btn btn-primary w-100 py-2 mb-3"
-              disabled={loading}
-            >
-              {loading ? "Creating..." : "Create Account"}
+            <button className="btn btn-primary w-100 py-2 mb-3">
+              Create Account
             </button>
 
           </form>
