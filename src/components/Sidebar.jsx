@@ -134,13 +134,7 @@ function Sidebar() {
             <FiDollarSign /> Pricing
           </Link>
 
-          <Link
-            className={isActive("/profile")}
-            to="/profile"
-            onClick={closeSidebar}
-          >
-            <FiUser /> Profile
-          </Link>
+        
 
           <Link
             className={isActive("/terms")}

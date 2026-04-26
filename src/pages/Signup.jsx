@@ -7,7 +7,11 @@ function Signup() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [country, setCountry] = useState("");
   const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSignup(e) {
     e.preventDefault();
@@ -17,47 +21,102 @@ function Signup() {
       return;
     }
 
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim().toLowerCase(),
       password,
+      options: {
+        data: {
+          full_name: `${firstName} ${lastName}`,
+          country: country,
+        },
+      },
     });
+
+    setLoading(false);
 
     if (error) {
       alert(error.message);
       return;
     }
 
-    // 🔥 Check if user already exists
-    if (data?.user?.identities?.length === 0) {
-      alert("User already exists. Please login.");
-      navigate("/login");
-      return;
-    }
-
-    alert("Signup successful. Please login.");
+    alert("Account created successfully! Please login.");
     navigate("/login");
   }
 
   return (
     <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      
-      <div className="card shadow-lg border-0" style={{ width: "100%", maxWidth: "400px" }}>
+      <div className="card shadow-lg border-0" style={{ width: "100%", maxWidth: "450px" }}>
         <div className="card-body p-4">
 
           <h3 className="text-center mb-4 fw-semibold">Sign Up</h3>
 
           <form onSubmit={handleSignup}>
-            
+
+            {/* Name */}
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <div className="form-floating">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="First Name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                  <label>First Name</label>
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <div className="form-floating">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Last Name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                  <label>Last Name</label>
+                </div>
+              </div>
+            </div>
+
             {/* Email */}
             <div className="form-floating mb-3">
               <input
                 type="email"
                 className="form-control"
                 placeholder="Email"
+                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
               <label>Email address</label>
+            </div>
+
+            {/* Country */}
+            <div className="form-floating mb-3">
+              <select
+                className="form-select"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                required
+              >
+                <option value="">Select Country</option>
+                <option value="India">India</option>
+                <option value="UAE">UAE</option>
+                <option value="Qatar">Qatar</option>
+              </select>
+              <label>Country</label>
             </div>
 
             {/* Password */}
@@ -66,13 +125,14 @@ function Signup() {
                 type="password"
                 className="form-control"
                 placeholder="Password"
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <label>Password</label>
             </div>
 
-            {/* Terms checkbox */}
+            {/* Terms */}
             <div className="form-check mb-3">
               <input
                 className="form-check-input"
@@ -89,9 +149,13 @@ function Signup() {
               </label>
             </div>
 
-            <button className="btn btn-primary w-100 py-2 mb-3">
-              Create Account
+            <button
+              className="btn btn-primary w-100 py-2 mb-3"
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Create Account"}
             </button>
+
           </form>
 
           <p className="text-center mb-0 small">
@@ -103,7 +167,6 @@ function Signup() {
 
         </div>
       </div>
-
     </div>
   );
 }

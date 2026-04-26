@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -35,14 +34,7 @@ function App() {
           <Route path="orders" element={<AdminOrders />} />
         </Route>
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+    
 
         <Route
           path="/dashboard"
