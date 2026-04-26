@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
   FiHome,
@@ -16,7 +16,30 @@ import {
 
 function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [showSidebar, setShowSidebar] = useState(false);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  async function loadProfile() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, email, role, is_profile_complete")
+      .eq("id", user.id)
+      .single();
+
+    setProfile(data);
+  }
 
   async function logout() {
     await supabase.auth.signOut();
@@ -27,9 +50,19 @@ function Sidebar() {
     setShowSidebar(false);
   }
 
+  function isActive(path) {
+    return location.pathname === path ? "active" : "";
+  }
+
+  const displayName =
+    profile?.full_name && profile?.is_profile_complete
+      ? profile.full_name
+      : profile?.email?.slice(0, 4)?.toUpperCase() || "USER";
+
+  const avatarLetter = displayName.charAt(0).toUpperCase();
+
   return (
     <>
-      {/* Mobile menu button */}
       {!showSidebar && (
         <button
           className="btn btn-light shadow-sm mobile-menu-btn d-md-none"
@@ -39,7 +72,6 @@ function Sidebar() {
         </button>
       )}
 
-      {/* Overlay */}
       {showSidebar && (
         <div
           className="sidebar-overlay d-md-none"
@@ -47,7 +79,6 @@ function Sidebar() {
         ></div>
       )}
 
-      {/* Sidebar */}
       <div className={`user-sidebar ${showSidebar ? "show" : ""}`}>
         <div className="d-flex justify-content-between align-items-center mb-4 d-md-none">
           <h5 className="mb-0">Menu</h5>
@@ -57,40 +88,73 @@ function Sidebar() {
           </button>
         </div>
 
-        <div className="user-box mb-4">
-          <div className="avatar">U</div>
-          <div>
-            <h6 className="mb-0">User</h6>
-            <small className="text-muted">user</small>
+        <div className="user-box mb-4" onClick={() => navigate("/profile")}>
+          <div className="avatar">{avatarLetter}</div>
+
+          <div className="user-info">
+            <h6 className="mb-0 text-truncate">{displayName}</h6>
+            <small className="text-muted">
+              {profile?.is_profile_complete
+                ? profile?.role || "user"
+                : "Incomplete Profile"}
+            </small>
           </div>
         </div>
 
         <nav className="sidebar-nav">
-          <Link to="/dashboard" onClick={closeSidebar}>
+          <Link
+            className={isActive("/dashboard")}
+            to="/dashboard"
+            onClick={closeSidebar}
+          >
             <FiHome /> Dashboard
           </Link>
 
-          <Link to="/add-order" onClick={closeSidebar}>
+          <Link
+            className={isActive("/add-order")}
+            to="/add-order"
+            onClick={closeSidebar}
+          >
             <FiPlusCircle /> Add Order
           </Link>
 
-          <Link to="/orders" onClick={closeSidebar}>
+          <Link
+            className={isActive("/orders")}
+            to="/orders"
+            onClick={closeSidebar}
+          >
             <FiList /> Orders
           </Link>
 
-          <Link to="/pricing" onClick={closeSidebar}>
+          <Link
+            className={isActive("/pricing")}
+            to="/pricing"
+            onClick={closeSidebar}
+          >
             <FiDollarSign /> Pricing
           </Link>
 
-          <Link to="/profile" onClick={closeSidebar}>
+          <Link
+            className={isActive("/profile")}
+            to="/profile"
+            onClick={closeSidebar}
+          >
             <FiUser /> Profile
           </Link>
 
-          <Link to="/terms" onClick={closeSidebar}>
+          <Link
+            className={isActive("/terms")}
+            to="/terms"
+            onClick={closeSidebar}
+          >
             <FiFileText /> Terms
           </Link>
 
-          <Link to="/contact" onClick={closeSidebar}>
+          <Link
+            className={isActive("/contact")}
+            to="/contact"
+            onClick={closeSidebar}
+          >
             <FiPhone /> Contact
           </Link>
 
