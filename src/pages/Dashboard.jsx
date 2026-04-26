@@ -5,7 +5,6 @@ import Sidebar from "../components/Sidebar";
 import {
   FiPlusCircle,
   FiList,
-  FiUser,
   FiDollarSign,
   FiPackage,
   FiClock,
@@ -15,7 +14,7 @@ import {
 function Dashboard() {
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState(null);
+  const [fullName, setFullName] = useState("");
   const [stats, setStats] = useState({
     totalOrders: 0,
     activeOrders: 0,
@@ -38,11 +37,11 @@ function Dashboard() {
 
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("*")
+      .select("full_name")
       .eq("id", user.id)
       .single();
 
-    setProfile(profileData);
+    setFullName(profileData?.full_name || user.email?.slice(0, 4)?.toUpperCase() || "User");
 
     const { data: orders } = await supabase
       .from("orders")
@@ -68,35 +67,15 @@ function Dashboard() {
 
   return (
     <div className="aso-layout">
-      <Sidebar profile={profile} active="dashboard" />
+      <Sidebar />
 
       <main className="aso-main">
         <header className="aso-topbar">
           <div>
             <h3>Dashboard</h3>
-            <p>Welcome back, {profile?.full_name || "User"}</p>
+            <p>Welcome back, {fullName}</p>
           </div>
-
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/profile")}
-          >
-            <FiUser className="me-2" />
-            My Profile
-          </button>
         </header>
-
-        {profile && !profile.is_profile_complete && (
-          <div className="alert alert-warning shadow-sm">
-            Your profile is not complete.{" "}
-            <button
-              className="btn btn-link p-0"
-              onClick={() => navigate("/profile")}
-            >
-              Complete profile
-            </button>
-          </div>
-        )}
 
         <div className="row g-4 mb-4">
           <div className="col-md-4">
@@ -134,7 +113,7 @@ function Dashboard() {
           <h5>Quick Actions</h5>
 
           <div className="row g-3">
-            <div className="col-md-3 col-sm-6">
+            <div className="col-md-4 col-sm-6">
               <button
                 className="aso-action"
                 onClick={() => navigate("/add-order")}
@@ -145,7 +124,7 @@ function Dashboard() {
               </button>
             </div>
 
-            <div className="col-md-3 col-sm-6">
+            <div className="col-md-4 col-sm-6">
               <button
                 className="aso-action"
                 onClick={() => navigate("/orders")}
@@ -156,7 +135,7 @@ function Dashboard() {
               </button>
             </div>
 
-            <div className="col-md-3 col-sm-6">
+            <div className="col-md-4 col-sm-6">
               <button
                 className="aso-action"
                 onClick={() => navigate("/pricing")}
@@ -164,17 +143,6 @@ function Dashboard() {
                 <FiDollarSign />
                 <strong>Pricing</strong>
                 <small>View packages</small>
-              </button>
-            </div>
-
-            <div className="col-md-3 col-sm-6">
-              <button
-                className="aso-action"
-                onClick={() => navigate("/profile")}
-              >
-                <FiUser />
-                <strong>Profile</strong>
-                <small>Edit details</small>
               </button>
             </div>
           </div>

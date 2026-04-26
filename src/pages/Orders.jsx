@@ -4,12 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 import {
-  FiHome,
   FiPlusCircle,
-  FiList,
-  FiUser,
-  FiLogOut,
-  FiDollarSign,
   FiPackage,
   FiEye,
   FiUpload,
@@ -18,7 +13,6 @@ import {
 function Orders() {
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [paymentFile, setPaymentFile] = useState(null);
@@ -39,14 +33,6 @@ function Orders() {
       return;
     }
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    setProfile(profileData);
-
     const { data, error } = await supabase
       .from("orders")
       .select(`
@@ -65,11 +51,6 @@ function Orders() {
 
     setOrders(data || []);
     setLoading(false);
-  }
-
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    navigate("/login");
   }
 
   function statusBadge(status) {
@@ -161,7 +142,7 @@ function Orders() {
 
   return (
     <div className="aso-layout">
-      <Sidebar profile={profile} active="orders" />
+      <Sidebar />
 
       <main className="aso-main">
         <header className="aso-topbar">

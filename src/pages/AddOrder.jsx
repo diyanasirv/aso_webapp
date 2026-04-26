@@ -2,22 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import {
-  FiHome,
-  FiPlusCircle,
-  FiList,
-  FiUser,
-  FiLogOut,
-  FiDollarSign,
-  FiPackage,
-  FiLink,
-  FiHash,
-} from "react-icons/fi";
+import { FiPackage, FiLink, FiHash } from "react-icons/fi";
 
 function AddOrder() {
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState(null);
   const [userId, setUserId] = useState("");
   const [services, setServices] = useState([]);
   const [packages, setPackages] = useState([]);
@@ -27,7 +16,7 @@ function AddOrder() {
 
   const [appName, setAppName] = useState("");
   const [appLink, setAppLink] = useState("");
-  const [quantity, setQuantity] = useState("1"); // Default to 1
+  const [quantity, setQuantity] = useState("1");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -55,14 +44,6 @@ function AddOrder() {
     }
 
     setUserId(user.id);
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    setProfile(profileData);
 
     const { data: servicesData, error } = await supabase
       .from("services")
@@ -108,11 +89,6 @@ function AddOrder() {
       ? Number(selectedPackageData.price) * Number(quantity)
       : 0;
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    navigate("/login");
-  }
-
   async function handleCreateOrder() {
     if (!appName || !appLink || !selectedService || !selectedPackage || !quantity) {
       alert("Please complete all order details");
@@ -152,7 +128,7 @@ function AddOrder() {
 
   return (
     <div className="aso-layout">
-      <Sidebar profile={profile} active="add-order" />
+      <Sidebar />
 
       <main className="aso-main">
         <header className="aso-topbar">
@@ -168,7 +144,6 @@ function AddOrder() {
               <h5>Order Details</h5>
 
               <div className="row g-3">
-                {/* Service Selection Dropdown */}
                 <div className="col-12">
                   <label className="form-label">Select Service</label>
                   <select
@@ -236,7 +211,7 @@ function AddOrder() {
                     <FiHash />
                     <select
                       className="form-select"
-                      style={{ paddingLeft: '40px' }} // Space for the icon
+                      style={{ paddingLeft: "40px" }}
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
                     >

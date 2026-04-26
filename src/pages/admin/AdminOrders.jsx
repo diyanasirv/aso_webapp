@@ -24,24 +24,34 @@ function AdminOrders() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return navigate("/login");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
 
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    if (profile?.role !== "admin") {
+    if (error) {
+      alert("Profile not found");
+      navigate("/dashboard");
+      return;
+    }
+
+    if (profile?.role?.trim().toLowerCase() !== "admin") {
       alert("Admin only");
-      return navigate("/dashboard");
+      navigate("/dashboard");
+      return;
     }
 
     loadOrders();
   }
 
   async function loadOrders() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select(`
         *,
@@ -51,25 +61,35 @@ function AdminOrders() {
       `)
       .order("created_at", { ascending: false });
 
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+      return;
+    }
+
     setOrders(data || []);
     setLoading(false);
   }
 
   async function updateStatus(id, value) {
-    await supabase.from("orders").update({ status: value }).eq("id", id);
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: value })
+      .eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     loadOrders();
   }
 
   async function updatePayment(id, value) {
     let newStatus = null;
 
-    if (value === "paid") {
-      newStatus = "in_progress";
-    }
-
-    if (value === "rejected") {
-      newStatus = "pending";
-    }
+    if (value === "paid") newStatus = "in_progress";
+    if (value === "rejected") newStatus = "pending";
 
     const updateData = {
       payment_status: value,
@@ -79,17 +99,25 @@ function AdminOrders() {
       updateData.status = newStatus;
     }
 
-    await supabase.from("orders").update(updateData).eq("id", id);
+    const { error } = await supabase
+      .from("orders")
+      .update(updateData)
+      .eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     loadOrders();
   }
 
   async function saveNote() {
-    if (!noteText.trim()) return;
+    if (!noteText.trim() || !selectedOrder) return;
 
     const { error } = await supabase
       .from("orders")
-      .update({ admin_remark: noteText })
+      .update({ admin_remark: noteText.trim() })
       .eq("id", selectedOrder.id);
 
     if (error) {
@@ -104,6 +132,11 @@ function AdminOrders() {
   }
 
   async function addToday(order, val) {
+    if (order.status === "completed" || order.status === "cancelled") {
+      alert("This order cannot be updated");
+      return;
+    }
+
     const today = Number(val);
 
     if (!today || today <= 0) {
@@ -111,7 +144,7 @@ function AdminOrders() {
       return;
     }
 
-    const currentDelivered = order.delivered_quantity || 0;
+    const currentDelivered = Number(order.delivered_quantity || 0);
     const total = currentDelivered + today;
 
     if (total > order.quantity) {
@@ -184,7 +217,7 @@ function AdminOrders() {
               <tr key={o.id}>
                 <td>{i + 1}</td>
                 <td>{o.id.slice(0, 6)}</td>
-                <td>{o.profiles?.full_name}</td>
+                <td>{o.profiles?.full_name || "-"}</td>
 
                 <td className="text-center">
                   <a href={o.app_link} target="_blank" rel="noreferrer">
@@ -193,10 +226,8 @@ function AdminOrders() {
                 </td>
 
                 <td>
-                  <div>
-                    <div>{o.packages?.name}</div>
-                    <small className="text-muted">{o.services?.name}</small>
-                  </div>
+                  <div>{o.packages?.name || "-"}</div>
+                  <small className="text-muted">{o.services?.name || "-"}</small>
                 </td>
 
                 <td>{o.quantity}</td>
@@ -204,6 +235,7 @@ function AdminOrders() {
                 <td>
                   <button
                     className="btn btn-sm btn-outline-secondary"
+                    disabled={o.status === "completed" || o.status === "cancelled"}
                     onClick={() => {
                       setSelectedOrder(o);
                       setTodayDelivery("");
@@ -239,7 +271,9 @@ function AdminOrders() {
                   >
                     <option value="pending">pending</option>
                     <option value="in_progress">in_progress</option>
-                    <option value="partially_completed">partially_completed</option>
+                    <option value="partially_completed">
+                      partially_completed
+                    </option>
                     <option value="completed">completed</option>
                     <option value="cancelled">cancelled</option>
                   </select>
@@ -273,6 +307,14 @@ function AdminOrders() {
                 </td>
               </tr>
             ))}
+
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan="12" className="text-center text-muted py-4">
+                  No orders found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -2,9 +2,9 @@ import { Navigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useEffect, useState } from "react";
 
-function ProtectedRoute({ children, requireProfile = false }) {
+function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(true);
-  const [redirect, setRedirect] = useState(null);
+  const [isAllowed, setIsAllowed] = useState(false);
 
   useEffect(() => {
     checkAccess();
@@ -16,25 +16,12 @@ function ProtectedRoute({ children, requireProfile = false }) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setRedirect("/login");
+      setIsAllowed(false);
       setLoading(false);
       return;
     }
 
-    if (requireProfile) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_profile_complete")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.is_profile_complete) {
-        setRedirect("/profile");
-        setLoading(false);
-        return;
-      }
-    }
-
+    setIsAllowed(true);
     setLoading(false);
   }
 
@@ -42,8 +29,8 @@ function ProtectedRoute({ children, requireProfile = false }) {
     return <p className="text-center mt-5">Loading...</p>;
   }
 
-  if (redirect) {
-    return <Navigate to={redirect} />;
+  if (!isAllowed) {
+    return <Navigate to="/login" replace />;
   }
 
   return children;

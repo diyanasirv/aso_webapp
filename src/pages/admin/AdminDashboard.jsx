@@ -17,28 +17,42 @@ function AdminDashboard() {
   }, []);
 
   async function loadStats() {
-    const { count: userCount, error: userError } = await supabase
+    const { data: users, error: userError } = await supabase
       .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "user");
+      .select("role");
 
     const { data: orders, error: orderError } = await supabase
       .from("orders")
       .select("status, payment_status");
 
-    if (userError) console.log("User count error:", userError);
-    if (orderError) console.log("Order count error:", orderError);
+    if (userError) console.log("User count error:", userError.message);
+    if (orderError) console.log("Order count error:", orderError.message);
 
+    const allUsers = users || [];
     const allOrders = orders || [];
 
     setStats({
-      totalUsers: userCount || 0,
+      totalUsers: allUsers.filter(
+        (u) => u.role?.trim().toLowerCase() === "user"
+      ).length,
+
       totalOrders: allOrders.length,
-      unpaidOrders: allOrders.filter((o) => o.payment_status === "unpaid").length,
+
+      unpaidOrders: allOrders.filter((o) => o.payment_status === "unpaid")
+        .length,
+
       paidOrders: allOrders.filter((o) => o.payment_status === "paid").length,
-      pendingOrders: allOrders.filter((o) => o.status === "pending").length,
-      runningOrders: allOrders.filter((o) => o.status === "in_progress").length,
-      completedOrders: allOrders.filter((o) => o.status === "completed").length,
+
+      pendingOrders: allOrders.filter(
+        (o) => o.status === "pending" || o.status === "payment_pending"
+      ).length,
+
+      runningOrders: allOrders.filter((o) =>
+        ["in_progress", "partially_completed"].includes(o.status)
+      ).length,
+
+      completedOrders: allOrders.filter((o) => o.status === "completed")
+        .length,
     });
   }
 
