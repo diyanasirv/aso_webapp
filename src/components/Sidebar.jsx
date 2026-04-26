@@ -1,76 +1,102 @@
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 import {
   FiHome,
   FiPlusCircle,
   FiList,
-  FiUser,
-  FiLogOut,
   FiDollarSign,
+  FiUser,
   FiFileText,
   FiPhone,
-  FiPackage,
+  FiLogOut,
+  FiMenu,
+  FiX,
 } from "react-icons/fi";
-import { supabase } from "../supabaseClient";
 
-function Sidebar({ profile, active }) {
+function Sidebar() {
   const navigate = useNavigate();
+  const [showSidebar, setShowSidebar] = useState(false);
 
-  async function handleLogout() {
+  async function logout() {
     await supabase.auth.signOut();
     navigate("/login");
   }
 
+  function closeSidebar() {
+    setShowSidebar(false);
+  }
+
   return (
-    <aside className="aso-sidebar">
-      <div className="aso-logo" onClick={() => navigate("/dashboard")}>
-        <FiPackage />
-        <span>ASO Panel</span>
-      </div>
+    <>
+      {/* Mobile menu button */}
+      <button
+        className="btn btn-light shadow-sm mobile-menu-btn d-md-none"
+        onClick={() => setShowSidebar(true)}
+      >
+        <FiMenu size={22} />
+      </button>
 
-      <div className="aso-user" >
-        <div className="aso-avatar">
-          {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+      {/* Overlay */}
+      {showSidebar && (
+        <div
+          className="sidebar-overlay d-md-none"
+          onClick={closeSidebar}
+        ></div>
+      )}
+
+      {/* Sidebar */}
+      <div className={`user-sidebar ${showSidebar ? "show" : ""}`}>
+        <div className="d-flex justify-content-between align-items-center mb-4 d-md-none">
+          <h5 className="mb-0">Menu</h5>
+          <button className="btn btn-sm" onClick={closeSidebar}>
+            <FiX size={22} />
+          </button>
         </div>
-        <div>
-          <strong>{profile?.full_name || "User"}</strong>
-          <small>{profile?.role || "user"}</small>
+
+        <div className="user-box mb-4">
+          <div className="avatar">U</div>
+          <div>
+            <h6 className="mb-0">User</h6>
+            <small className="text-muted">user</small>
+          </div>
         </div>
+
+        <nav className="sidebar-nav">
+          <Link to="/dashboard" onClick={closeSidebar}>
+            <FiHome /> Dashboard
+          </Link>
+
+          <Link to="/add-order" onClick={closeSidebar}>
+            <FiPlusCircle /> Add Order
+          </Link>
+
+          <Link to="/orders" onClick={closeSidebar}>
+            <FiList /> Orders
+          </Link>
+
+          <Link to="/pricing" onClick={closeSidebar}>
+            <FiDollarSign /> Pricing
+          </Link>
+
+          <Link to="/profile" onClick={closeSidebar}>
+            <FiUser /> Profile
+          </Link>
+
+          <Link to="/terms" onClick={closeSidebar}>
+            <FiFileText /> Terms
+          </Link>
+
+          <Link to="/contact" onClick={closeSidebar}>
+            <FiPhone /> Contact
+          </Link>
+
+          <button onClick={logout}>
+            <FiLogOut /> Logout
+          </button>
+        </nav>
       </div>
-
-      <nav className="aso-menu">
-        <button className={active==="dashboard"?"active":""} onClick={()=>navigate("/dashboard")}>
-          <FiHome /> Dashboard
-        </button>
-
-        <button className={active==="add-order"?"active":""} onClick={()=>navigate("/add-order")}>
-          <FiPlusCircle /> Add Order
-        </button>
-
-        <button className={active==="orders"?"active":""} onClick={()=>navigate("/orders")}>
-          <FiList /> Orders
-        </button>
-
-        <button onClick={()=>navigate("/pricing")}>
-          <FiDollarSign /> Pricing
-        </button>
-
-        <button className={active==="profile"?"active":""} onClick={()=>navigate("/profile")}>
-          <FiUser /> Profile
-        </button>
-
-        <button onClick={()=>navigate("/terms")}>
-          <FiFileText /> Terms
-        </button>
-
-        <button onClick={()=>navigate("/contact")}>
-          <FiPhone /> Contact
-        </button>
-
-        <button onClick={handleLogout}>
-          <FiLogOut /> Logout
-        </button>
-      </nav>
-    </aside>
+    </>
   );
 }
 
