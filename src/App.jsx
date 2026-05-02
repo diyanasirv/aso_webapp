@@ -12,13 +12,15 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Pricing from "./pages/Pricing";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
-
+import AdminUsers from "./pages/admin/AdminUsers";
+import Landing from "./pages/Landing";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Signup />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/signup" element={<Signup />} />       
         <Route path="/login" element={<Login />} />
 
         {/* Admin Routes */}
@@ -32,9 +34,10 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
 
-    
+
 
         <Route
           path="/dashboard"

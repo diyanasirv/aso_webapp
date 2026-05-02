@@ -49,55 +49,105 @@ function Login() {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div
+      className="min-vh-100 d-flex align-items-center justify-content-center px-3 py-4"
+      style={{
+        background: "linear-gradient(135deg, #f8f9fa, #e9ecef)",
+      }}
+    >
       <div
-        className="card shadow-sm p-4"
-        style={{ width: "100%", maxWidth: "400px" }}
+        className="card border-0 shadow-lg rounded-4 overflow-hidden w-100"
+        style={{ maxWidth: "950px" }}
       >
-        <h3 className="text-center mb-4 fw-bold">Login</h3>
+        <div className="row g-0">
+          {/* Left Side */}
+          <div className="col-lg-5 d-none d-lg-flex flex-column justify-content-center text-white p-5 bg-primary">
+            <h2 className="fw-bold mb-3">Welcome Back</h2>
+            <p className="mb-4 opacity-75">
+              Log in to access your ASO dashboard, track app performance, manage
+              campaigns, and monitor growth insights.
+            </p>
 
-        <form onSubmit={handleLogin}>
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
+            <div className="small">
+              <div className="mb-3">✔ Track App Rankings</div>
+              <div className="mb-3">✔ Manage Orders & Campaigns</div>
+              <div className="mb-3">✔ Access Powerful Growth Tools</div>
+            </div>
           </div>
 
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Password</label>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
+          {/* Right Side */}
+          <div className="col-lg-7 col-12 bg-white">
+            <div className="p-4 p-md-5">
+              <div className="text-center text-lg-start mb-4">
+                <h3 className="fw-bold mb-1">Login</h3>
+                <p className="text-muted mb-0 small">
+                  Enter your credentials to continue
+                </p>
+              </div>
+
+              <form onSubmit={handleLogin}>
+                {/* Email */}
+                <div className="form-floating mb-3">
+                  <input
+                    type="email"
+                    className="form-control rounded-3"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                  />
+                  <label>Email address</label>
+                </div>
+
+                {/* Password */}
+                <div className="form-floating mb-3">
+                  <input
+                    type="password"
+                    className="form-control rounded-3"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <label>Password</label>
+                </div>
+
+                {/* Extra Links */}
+                <div className="d-flex justify-content-between align-items-center mb-4 small">
+                  <div className="form-check">
+                    <input className="form-check-input" type="checkbox" id="remember" />
+                    <label className="form-check-label text-muted" htmlFor="remember">
+                      Remember me
+                    </label>
+                  </div>
+
+                  <Link to="/forgot-password" className="text-decoration-none fw-medium">
+                    Forgot Password?
+                  </Link>
+                </div>
+
+                {/* Button */}
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 py-3 rounded-3 fw-semibold"
+                  disabled={loading}
+                >
+                  {loading ? "Logging in..." : "Login"}
+                </button>
+              </form>
+
+              {/* Footer */}
+              <p className="text-center mt-4 mb-0 small text-muted">
+                Don’t have an account?{" "}
+                <Link to="/signup" className="text-decoration-none fw-semibold">
+                  Signup
+                </Link>
+              </p>
+            </div>
           </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary w-100 mt-2"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <p className="text-center mt-3 mb-0">
-          Don’t have an account?{" "}
-          <Link to="/" className="fw-semibold">
-            Signup
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

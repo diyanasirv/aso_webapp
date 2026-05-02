@@ -48,7 +48,7 @@ function Contact() {
                                     <strong>Email:</strong> support@asopanel.com
                                 </p>
                                 <p className="mb-2">
-                                    <strong>WhatsApp:</strong> +91 98765 43210
+                                    <strong>WhatsApp:</strong> +91 8156902004
                                 </p>
                                 <p className="mb-2">
                                     <strong>Support Time:</strong> 10:00 AM - 6:00 PM
