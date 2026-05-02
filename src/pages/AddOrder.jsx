@@ -30,6 +30,7 @@ function AddOrder() {
       loadPackages(selectedService);
     } else {
       setPackages([]);
+      setSelectedPackage("");
     }
   }, [selectedService]);
 
@@ -53,6 +54,8 @@ function AddOrder() {
 
     if (error) {
       alert(error.message);
+      setLoading(false);
+      return;
     }
 
     setServices(servicesData || []);
@@ -71,6 +74,7 @@ function AddOrder() {
 
     if (error) {
       alert(error.message);
+      return;
     }
 
     setPackages(packagesData || []);
@@ -97,29 +101,39 @@ function AddOrder() {
 
     setSubmitting(true);
 
-    const { error } = await supabase.from("orders").insert({
-      user_id: userId,
-      app_name: appName,
-      app_link: appLink,
-      service_id: selectedService,
-      package_id: selectedPackage,
-      quantity: Number(quantity),
-      delivered_quantity: 0,
-      remaining_quantity: Number(quantity),
-      price: totalPrice,
-      status: "pending",
-      payment_status: "unpaid",
-    });
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({
+        user_id: userId,
+        app_name: appName,
+        app_link: appLink,
+        service_id: selectedService,
+        package_id: selectedPackage,
+        quantity: Number(quantity),
+        delivered_quantity: 0,
+        remaining_quantity: Number(quantity),
+        price: totalPrice,
+        status: "pending",
+        payment_status: "unpaid",
+      })
+      .select("id")
+      .single();
 
     setSubmitting(false);
 
     if (error) {
       alert(error.message);
+      console.log("Order insert error:", error);
       return;
     }
 
-    alert("Order created successfully");
-    navigate("/orders");
+    if (!data?.id) {
+      alert("Order created but payment redirect failed");
+      console.log("Inserted order data:", data);
+      return;
+    }
+
+    navigate(`/payment/${data.id}`);
   }
 
   if (loading) {
@@ -134,7 +148,9 @@ function AddOrder() {
         <header className="aso-topbar">
           <div>
             <h3>Create New Order</h3>
-            <p>Select a service, choose package, and review before placing order.</p>
+            <p>
+              Select a service, choose package, and review before placing order.
+            </p>
           </div>
         </header>
 
@@ -269,7 +285,8 @@ function AddOrder() {
               </button>
 
               <p className="summary-note">
-                After placing the order, you can upload payment proof and track progress.
+                After placing the order, you’ll be redirected to payment to
+                upload proof and complete your order.
               </p>
             </div>
           </div>

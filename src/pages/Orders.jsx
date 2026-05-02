@@ -18,6 +18,7 @@ function Orders() {
   const [paymentFile, setPaymentFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -29,7 +30,7 @@ function Orders() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      navigate("/login");
+      navigate("/");
       return;
     }
 
@@ -103,7 +104,7 @@ function Orders() {
 
     const { error: paymentError } = await supabase.from("payments").insert({
       user_id: selectedOrder.user_id,
-      order_id: selectedOrder.id,
+      order_id: selectedOrder.order_number,
       amount: selectedOrder.price,
       payment_status: "pending",
       payment_screenshot: publicUrlData.publicUrl,
@@ -193,9 +194,9 @@ function Orders() {
 
                 <tbody>
                   {orders.map((order) => (
-                    <tr key={order.id}>
+                    <tr key={order.order_number}>
                       <td>
-                        <strong>#{order.id.slice(0, 8)}</strong>
+                        <strong>#{order.order_number}</strong>
                         <br />
                         <small className="text-muted">
                           {new Date(order.created_at).toLocaleDateString()}
@@ -258,21 +259,14 @@ function Orders() {
                       </td>
 
                       <td>
+
                         <button
-                          className="btn btn-sm btn-outline-primary me-2"
+                          className="btn btn-sm btn-outline-success"
                           onClick={() => setSelectedOrder(order)}
                         >
                           <FiEye />
                         </button>
 
-                        {order.payment_status !== "paid" && (
-                          <button
-                            className="btn btn-sm btn-outline-success"
-                            onClick={() => setSelectedOrder(order)}
-                          >
-                            <FiUpload />
-                          </button>
-                        )}
                       </td>
                     </tr>
                   ))}
@@ -285,7 +279,28 @@ function Orders() {
         {selectedOrder && (
           <div className="custom-modal">
             <div className="modal-box order-modal">
-              <h5 className="fw-bold mb-3">Order Details</h5>
+
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="fw-bold mb-0">Order Details</h5>
+
+                <div className="d-flex gap-2">
+                  {/* Invoice button */}
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => setShowInvoice(true)}
+                  >
+                    Invoice
+                  </button>
+
+                  {/* Close button */}
+                  <button
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={() => setSelectedOrder(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
               <div className="detail-row">
                 <span>Order ID</span>
@@ -338,51 +353,17 @@ function Orders() {
 
               <div className="detail-row">
                 <span>Payment</span>
-                <span
-                  className={`badge ${paymentBadge(
-                    selectedOrder.payment_status
-                  )}`}
-                >
+                <span className={`badge ${paymentBadge(selectedOrder.payment_status)}`}>
                   {selectedOrder.payment_status}
                 </span>
               </div>
 
               <div className="mt-3">
                 <small className="text-muted">
-                  Reports and admin notes will appear here after admin uploads
-                  delivery proof.
+                  Invoice will show payment details and order summary.
                 </small>
               </div>
 
-              {selectedOrder.payment_status !== "paid" && (
-                <div className="mt-4">
-                  <label className="form-label">Upload payment proof</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="form-control"
-                    onChange={(e) => setPaymentFile(e.target.files[0])}
-                  />
-
-                  <button
-                    className="btn btn-primary w-100 mt-3"
-                    onClick={handlePaymentUpload}
-                    disabled={uploading}
-                  >
-                    {uploading ? "Uploading..." : "Upload Payment Proof"}
-                  </button>
-                </div>
-              )}
-
-              <button
-                className="btn btn-light border w-100 mt-3"
-                onClick={() => {
-                  setSelectedOrder(null);
-                  setPaymentFile(null);
-                }}
-              >
-                Close
-              </button>
             </div>
           </div>
         )}

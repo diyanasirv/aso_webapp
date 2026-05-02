@@ -14,13 +14,14 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import AdminUsers from "./pages/admin/AdminUsers";
 import Landing from "./pages/Landing";
+import Payment from "./pages/Payment";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/signup" element={<Signup />} />       
+        <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
 
         {/* Admin Routes */}
@@ -89,6 +90,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Contact />
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/payment/:orderId"
+          element={
+            <ProtectedRoute>
+              <Payment />
             </ProtectedRoute>
           }
         />

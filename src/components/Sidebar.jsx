@@ -43,7 +43,7 @@ function Sidebar() {
 
   async function logout() {
     await supabase.auth.signOut();
-    navigate("/login");
+    navigate("/");
   }
 
   function closeSidebar() {
