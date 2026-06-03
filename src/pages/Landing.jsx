@@ -242,7 +242,7 @@ export default function Landing() {
 
         {/* ── NAV ── */}
         <nav style={S.nav}>
-          <div style={S.logo}>ASOBoost</div>
+          <div style={S.logo}>AsoGroh</div>
 
           {isMobile ? (
             <button style={S.hamburger} onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">

@@ -30,7 +30,7 @@ function Orders() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      navigate("/");
+      navigate("/login");
       return;
     }
 
