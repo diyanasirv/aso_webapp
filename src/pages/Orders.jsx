@@ -19,18 +19,53 @@ function Orders() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    let channel;
 
-  async function loadOrders() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    async function setupOrders() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      navigate("/login");
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      setUserId(user.id);
+      await loadOrders(user.id);
+
+      channel = supabase
+        .channel("orders-user-realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "orders",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => loadOrders(user.id)
+        )
+        .subscribe();
+    }
+
+    setupOrders();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [navigate]);
+
+  async function loadOrders(userIdParam) {
+    const userIdToUse = userIdParam || userId;
+
+    const idToFetch = userIdToUse;
+    if (!idToFetch) {
       return;
     }
 
@@ -41,7 +76,7 @@ function Orders() {
         services(name),
         packages(name)
       `)
-      .eq("user_id", user.id)
+      .eq("user_id", idToFetch)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -58,24 +93,21 @@ function Orders() {
     if (status === "completed") return "bg-success";
     if (status === "in_progress") return "bg-primary";
     if (status === "partially_completed") return "bg-info";
-    if (status === "payment_pending") return "bg-warning text-dark";
     if (status === "pending") return "bg-secondary";
+    if (status === "payment_pending") return "bg-secondary";
     if (status === "cancelled") return "bg-danger";
     return "bg-secondary";
   }
 
   function paymentBadge(status) {
-    if (status === "paid") return "bg-success";
+    if (status === "confirmed") return "bg-success";
     if (status === "pending") return "bg-warning text-dark";
     if (status === "rejected") return "bg-danger";
-    if (status === "unpaid") return "bg-secondary";
+    if (status === "under_review") return "bg-secondary";
     return "bg-secondary";
   }
 
-  function progressPercent(order) {
-    if (!order.quantity) return 0;
-    return Math.round(((order.delivered_quantity || 0) / order.quantity) * 100);
-  }
+
 
   async function handlePaymentUpload() {
     if (!paymentFile || !selectedOrder) {
@@ -104,9 +136,11 @@ function Orders() {
 
     const { error: paymentError } = await supabase.from("payments").insert({
       user_id: selectedOrder.user_id,
-      order_id: selectedOrder.order_number,
+      order_id: selectedOrder.id,
+      order_number: selectedOrder.order_number,
+      email: selectedOrder.email,
       amount: selectedOrder.price,
-      payment_status: "pending",
+      payment_status: "under_review",
       payment_screenshot: publicUrlData.publicUrl,
     });
 
@@ -119,8 +153,8 @@ function Orders() {
     const { error: orderError } = await supabase
       .from("orders")
       .update({
-        payment_status: "pending",
-        status: "payment_pending",
+        payment_status: "under_review",
+        status: "pending",
       })
       .eq("id", selectedOrder.id);
 
@@ -134,7 +168,7 @@ function Orders() {
     alert("Payment proof uploaded successfully");
     setSelectedOrder(null);
     setPaymentFile(null);
-    loadOrders();
+    loadOrders(userId);
   }
 
   if (loading) {
@@ -184,10 +218,8 @@ function Orders() {
                     <th>Order ID</th>
                     <th>App Name</th>
                     <th>Package</th>
-                    <th>Quantity</th>
-                    <th>Delivered / Remaining</th>
-                    <th>Status</th>
-                    <th>Payment</th>
+                    <th>Payment Status</th>
+                    <th>Order Status</th>
                     <th>Details</th>
                   </tr>
                 </thead>
@@ -224,30 +256,6 @@ function Orders() {
                         </small>
                       </td>
 
-                      <td>{order.quantity}</td>
-
-                      <td>
-                        <div className="d-flex justify-content-between">
-                          <small>{order.delivered_quantity || 0} delivered</small>
-                          <small>
-                            {order.remaining_quantity ?? order.quantity} left
-                          </small>
-                        </div>
-
-                        <div className="progress mt-1" style={{ height: "7px" }}>
-                          <div
-                            className="progress-bar"
-                            style={{ width: `${progressPercent(order)}%` }}
-                          ></div>
-                        </div>
-                      </td>
-
-                      <td>
-                        <span className={`badge ${statusBadge(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </td>
-
                       <td>
                         <span
                           className={`badge ${paymentBadge(
@@ -255,6 +263,12 @@ function Orders() {
                           )}`}
                         >
                           {order.payment_status}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className={`badge ${statusBadge(order.status)}`}>
+                          {order.status === "payment_pending" ? "pending" : order.status}
                         </span>
                       </td>
 
@@ -322,22 +336,6 @@ function Orders() {
                 <strong>{selectedOrder.packages?.name || "-"}</strong>
               </div>
 
-              <div className="detail-row">
-                <span>Quantity</span>
-                <strong>{selectedOrder.quantity}</strong>
-              </div>
-
-              <div className="detail-row">
-                <span>Delivered</span>
-                <strong>{selectedOrder.delivered_quantity || 0}</strong>
-              </div>
-
-              <div className="detail-row">
-                <span>Remaining</span>
-                <strong>
-                  {selectedOrder.remaining_quantity ?? selectedOrder.quantity}
-                </strong>
-              </div>
 
               <div className="detail-row">
                 <span>Total Price</span>
@@ -347,7 +345,7 @@ function Orders() {
               <div className="detail-row">
                 <span>Status</span>
                 <span className={`badge ${statusBadge(selectedOrder.status)}`}>
-                  {selectedOrder.status}
+                  {selectedOrder.status === "payment_pending" ? "pending" : selectedOrder.status}
                 </span>
               </div>
 

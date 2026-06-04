@@ -69,18 +69,24 @@ function Payment() {
         type: "upi",
         upi_id: "diyanasir01-3@okaxis",
         qr_code_url: "/IMG_8496.png",
+        show: "UPI ID "
       },
       {
         id: 2,
         method_name: "Binance Pay",
         type: "binance",
         binance_id: "801283897",
+        show: "BINANCE ID "
+
       },
       {
         id: 3,
         method_name: "PayPal",
         type: "qr",
         qr_code_url: "/qr-code.png",
+        paypal_id: "diyanasir01@gmail.com",
+        show: "PAYPAL ID "
+
       },
     ];
 
@@ -132,12 +138,14 @@ function Payment() {
     const { error: paymentError } = await supabase.from("payments").insert({
       order_id: order.id,
       user_id: user.id,
+      order_number: order.order_number,
+      email: user.email,
       payment_method: selectedMethod.method_name,
       payment_type: selectedMethod.type,
-       amount: order.price,
+      amount: order.price,
       transaction_id: transactionId,
       proof_url: publicUrlData.publicUrl,
-      status: "pending",
+      status: "under_review",
     });
 
     if (paymentError) {
@@ -149,8 +157,8 @@ function Payment() {
     await supabase
       .from("orders")
       .update({
-        payment_status: "pending",
-        status: "payment_pending",
+        payment_status: "under_review",
+        status: "pending",
       })
       .eq("id", order.id);
 
@@ -179,9 +187,7 @@ function Payment() {
                 <strong>Order ID:</strong> #{order.order_number}
               </p>
 
-              <p>
-                <strong>Quantity:</strong> {order.quantity}
-              </p>
+
 
               <p>
                 <strong>Total:</strong>{" "}
@@ -208,8 +214,8 @@ function Payment() {
                   <div className="col-md-4" key={method.id}>
                     <div
                       className={`border rounded-4 p-3 text-center h-100 ${selectedMethod?.id === method.id
-                          ? "border-primary shadow-sm"
-                          : ""
+                        ? "border-primary shadow-sm"
+                        : ""
                         }`}
                       style={{ cursor: "pointer" }}
                       onClick={() => setSelectedMethod(method)}
@@ -240,7 +246,7 @@ function Payment() {
             {/* PAYMENT DETAILS */}
             {selectedMethod && (
               <div className="border rounded-4 p-4 mb-4 bg-light">
-                <h5>{selectedMethod.method_name}</h5>
+                <h5>{selectedMethod.show}</h5>
 
                 {selectedMethod.type === "upi" && (
                   <>
@@ -263,12 +269,17 @@ function Payment() {
                 )}
 
                 {selectedMethod.type === "qr" && (
-                  <img
-                    src={selectedMethod.qr_code_url}
-                    alt="QR"
-                    className="img-fluid rounded border bg-white p-2"
-                    style={{ width: "260px", height: "260px" }}
-                  />
+                  <>
+                    <div className="p-3 border bg-white rounded fw-bold mb-3">
+                      {selectedMethod.paypal_id}
+                    </div>
+                    <img
+                      src={selectedMethod.qr_code_url}
+                      alt="QR"
+                      className="img-fluid rounded border bg-white p-2"
+                      style={{ width: "260px", height: "260px" }}
+                    />
+                  </>
                 )}
               </div>
             )}
@@ -311,7 +322,7 @@ function Payment() {
       {showPopup && (
         <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center">
           <div className="bg-white p-4 rounded-4 text-center shadow">
-            <h4>Payment Submitted 🎉</h4>
+            <h4>Payment Proof Submitted 🎉</h4>
             <p>After verification, your order will be processed.check your payment status from orders page.</p>
             <button
               className="btn btn-primary w-100"

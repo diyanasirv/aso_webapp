@@ -5,7 +5,7 @@ function AdminDashboard() {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalOrders: 0,
-    unpaidOrders: 0,
+    underReviewOrders: 0,
     paidOrders: 0,
     pendingOrders: 0,
     runningOrders: 0,
@@ -38,8 +38,7 @@ function AdminDashboard() {
 
       totalOrders: allOrders.length,
 
-      unpaidOrders: allOrders.filter((o) => o.payment_status === "unpaid")
-        .length,
+      underReviewOrders: allOrders.filter((o) => o.payment_status === "under_review").length,
 
       paidOrders: allOrders.filter((o) => o.payment_status === "paid").length,
 
@@ -63,7 +62,7 @@ function AdminDashboard() {
       <div className="row g-3">
         <StatCard title="Total Users" value={stats.totalUsers} />
         <StatCard title="Total Orders" value={stats.totalOrders} />
-        <StatCard title="Unpaid Orders" value={stats.unpaidOrders} />
+        <StatCard title="Under Review Orders" value={stats.underReviewOrders} />
         <StatCard title="Paid Orders" value={stats.paidOrders} />
         <StatCard title="Pending Orders" value={stats.pendingOrders} />
         <StatCard title="Running Orders" value={stats.runningOrders} />

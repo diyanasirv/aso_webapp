@@ -15,6 +15,7 @@ import Contact from "./pages/Contact";
 import AdminUsers from "./pages/admin/AdminUsers";
 import Landing from "./pages/Landing";
 import Payment from "./pages/Payment";
+import AdminPayments from "./pages/admin/AdminPayments";
 
 function App() {
   return (
@@ -26,7 +27,7 @@ function App() {
 
         {/* Admin Routes */}
         <Route
-          path="/admin"
+          path="admin"
           element={
             <ProtectedRoute>
               <AdminLayout />
@@ -36,6 +37,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="payments" element={<AdminPayments />} />
         </Route>
 
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { FiPackage, FiLink, FiHash } from "react-icons/fi";
+import { FiPackage, FiLink } from "react-icons/fi";
 
 function AddOrder() {
   const navigate = useNavigate();
@@ -16,7 +16,6 @@ function AddOrder() {
 
   const [appName, setAppName] = useState("");
   const [appLink, setAppLink] = useState("");
-  const [quantity, setQuantity] = useState("1");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -88,13 +87,19 @@ function AddOrder() {
     (pkg) => pkg.id === selectedPackage
   );
 
-  const totalPrice =
-    selectedPackageData && quantity
-      ? Number(selectedPackageData.price) * Number(quantity)
-      : 0;
+  const totalPrice = selectedPackageData
+    ? Number(selectedPackageData.price)
+    : 0;
 
   async function handleCreateOrder() {
-    if (!appName || !appLink || !selectedService || !selectedPackage || !quantity) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("User not logged in");
+      navigate("/login");
+      return;
+    }
+
+    if (!appName || !appLink || !selectedService || !selectedPackage) {
       alert("Please complete all order details");
       return;
     }
@@ -105,16 +110,14 @@ function AddOrder() {
       .from("orders")
       .insert({
         user_id: userId,
+        email: user.email,
         app_name: appName,
         app_link: appLink,
         service_id: selectedService,
         package_id: selectedPackage,
-        quantity: Number(quantity),
-        delivered_quantity: 0,
-        remaining_quantity: Number(quantity),
         price: totalPrice,
         status: "pending",
-        payment_status: "unpaid",
+        payment_status: "under_review",
       })
       .select("id")
       .single();
@@ -148,9 +151,7 @@ function AddOrder() {
         <header className="aso-topbar">
           <div>
             <h3>Create New Order</h3>
-            <p>
-              Select a service, choose package, and review before placing order.
-            </p>
+            <p>Select a service, choose package, and proceed to payment.</p>
           </div>
         </header>
 
@@ -160,6 +161,8 @@ function AddOrder() {
               <h5>Order Details</h5>
 
               <div className="row g-3">
+
+                {/* SERVICE SELECT */}
                 <div className="col-12">
                   <label className="form-label">Select Service</label>
                   <select
@@ -176,8 +179,23 @@ function AddOrder() {
                   </select>
                 </div>
 
+                {/* SERVICE DESCRIPTION */}
+                {selectedServiceData && (
+                  <div className="col-12">
+                    <div className="p-3 bg-light rounded">
+                      <h6 className="mb-1">Service Description</h6>
+                      <p className="mb-0 text-muted"
+                        style={{ whiteSpace: "pre-line" }}>
+                        {selectedServiceData.description ||
+                          "No description available"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* APP NAME */}
                 <div className="col-md-6">
-                  <label className="form-label">App / Business Name</label>
+                  <label className="form-label">App Name</label>
                   <div className="input-icon-box">
                     <FiPackage />
                     <input
@@ -189,8 +207,9 @@ function AddOrder() {
                   </div>
                 </div>
 
+                {/* APP LINK */}
                 <div className="col-md-6">
-                  <label className="form-label">App / Business Link</label>
+                  <label className="form-label">App Link</label>
                   <div className="input-icon-box">
                     <FiLink />
                     <input
@@ -202,6 +221,7 @@ function AddOrder() {
                   </div>
                 </div>
 
+                {/* PACKAGE */}
                 <div className="col-md-6">
                   <label className="form-label">Package</label>
                   <select
@@ -211,8 +231,11 @@ function AddOrder() {
                     disabled={!selectedService}
                   >
                     <option value="">
-                      {selectedService ? "Select package" : "Choose service first"}
+                      {selectedService
+                        ? "Select package"
+                        : "Choose service first"}
                     </option>
+
                     {packages.map((pkg) => (
                       <option key={pkg.id} value={pkg.id}>
                         {pkg.name} — ${pkg.price}
@@ -221,28 +244,11 @@ function AddOrder() {
                   </select>
                 </div>
 
-                <div className="col-md-6">
-                  <label className="form-label">Quantity</label>
-                  <div className="input-icon-box">
-                    <FiHash />
-                    <select
-                      className="form-select"
-                      style={{ paddingLeft: "40px" }}
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                    >
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                    </select>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
+          {/* ORDER SUMMARY */}
           <div className="col-lg-4">
             <div className="order-summary-card">
               <h5>Order Summary</h5>
@@ -258,15 +264,12 @@ function AddOrder() {
               </div>
 
               <div className="summary-row">
-                <span>Unit Price</span>
+                <span>Price</span>
                 <strong>
-                  {selectedPackageData ? `$${selectedPackageData.price}` : "-"}
+                  {selectedPackageData
+                    ? `$${selectedPackageData.price}`
+                    : "-"}
                 </strong>
-              </div>
-
-              <div className="summary-row">
-                <span>Quantity</span>
-                <strong>{quantity}</strong>
               </div>
 
               <hr />
@@ -285,8 +288,7 @@ function AddOrder() {
               </button>
 
               <p className="summary-note">
-                After placing the order, you’ll be redirected to payment to
-                upload proof and complete your order.
+                After placing the order, you will be redirected to payment page.
               </p>
             </div>
           </div>
