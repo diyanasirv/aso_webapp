@@ -53,6 +53,16 @@ function AdminOrders() {
         ...prev,
         [orderToOpen.id]: false,
       }));
+      // remove only the `chat` query param from the URL so the auto-open runs once
+      try {
+        const params = new URLSearchParams(window.location.search || "");
+        params.delete("chat");
+        const newSearch = params.toString();
+        const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
+        window.history.replaceState({}, "", newUrl);
+      } catch (e) {
+        // ignore
+      }
     }
   }, [orders, searchParams]);
 

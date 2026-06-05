@@ -33,7 +33,7 @@ function AdminLayout() {
         .single();
 
       if (error || profile?.role?.toLowerCase() !== "admin") {
-        alert("Admin only");
+        // silently redirect non-admin users back to dashboard
         navigate("/dashboard");
         return;
       }
@@ -51,7 +51,11 @@ function AdminLayout() {
 
   return (
     checking ? (
-      <div className="p-4">Checking admin...</div>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
     ) : (
     <div className="d-flex min-vh-100">
 

@@ -80,13 +80,10 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
     }, [orderId]);
 
     useEffect(() => {
-        // scroll to bottom
         if (listRef.current) {
             listRef.current.scrollTop = listRef.current.scrollHeight;
         }
     }, [messages]);
-
-    // use shared getUserWithRetry from supabaseClient
 
     async function sendMessage() {
         if (!text.trim() || !orderId) return;
@@ -108,9 +105,8 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
             message: text.trim(),
         };
 
-        let userRes;
         try {
-            userRes = await getUserWithRetry();
+            await getUserWithRetry();
         } catch (e) {
             console.error("Auth getUser failed after retries:", e);
             alert("You must be logged in to send messages.");
@@ -139,47 +135,90 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
     return (
         <div
             className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-            style={{ zIndex: 9999, pointerEvents: "auto" }}
+            style={{
+                zIndex: 9999,
+                pointerEvents: "auto",
+                background: "rgba(0,0,0,0.4)",
+                padding: "10px",
+            }}
         >
-            <div className="bg-white rounded shadow p-3" style={{ width: "100%", maxWidth: 720, maxHeight: "80vh" }}>
-                <div className="d-flex justify-content-between align-items-center mb-2">
+            <div
+                className="bg-white rounded-3 shadow p-3"
+                style={{
+                    width: "100%",
+                    maxWidth: "720px",
+                    height: "80vh",
+                    maxHeight: "80vh",
+                    overflow: "hidden",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
+                {/* Header */}
+                <div className="d-flex justify-content-between align-items-center mb-2 flex-shrink-0">
                     <div>
-                        <h6 className="mb-0">Chat — Order #{orderNumber}</h6>
+                        <h6 className="mb-0 fw-bold">
+                            Chat — Order #{orderNumber}
+                        </h6>
                         {participantName && (
-                            <small className="text-muted">Customer: {participantName}</small>
+                            <small className="text-muted">
+                                Customer: {participantName}
+                            </small>
                         )}
                     </div>
-                    <button className="btn btn-sm btn-outline-secondary" onClick={onClose}>Close</button>
+                    <button
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={onClose}
+                    >
+                        Close
+                    </button>
                 </div>
 
-                <div ref={listRef} className="border rounded p-2 mb-2" style={{ height: 360, overflowY: "auto" }}>
+                {/* Message List area */}
+                <div
+                    ref={listRef}
+                    className="border rounded p-3 mb-2 bg-light"
+                    style={{
+                        flex: 1,
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                        width: "100%",
+                    }}
+                >
                     {messages.length === 0 ? (
-                        <div className="text-muted">No messages yet</div>
+                        <div className="text-muted text-center py-4">
+                            No messages yet
+                        </div>
                     ) : (
                         messages.map((m) => {
                             const isSystem = m.sender_role === "system";
                             const isMine = currentUserId && m.sender_id === currentUserId;
+
                             const containerClass = isSystem
                                 ? "justify-content-center"
                                 : isMine
                                     ? "justify-content-end"
                                     : "justify-content-start";
+
                             const bubbleClass = isSystem
-                                ? "border border-2 text-dark"
+                                ? "border border-2 text-dark bg-white"
                                 : isMine
                                     ? "bg-primary text-white"
-                                    : "bg-light text-dark";
+                                    : "bg-white text-dark border";
+
                             const bubbleStyle = {
-                                maxWidth: "85%",
+                                maxWidth: isSystem ? "90%" : "75%",
                                 whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
                                 fontWeight: isSystem ? 600 : 400,
-                                textAlign: isSystem ? "center" : "left",
                                 background: isSystem
                                     ? "linear-gradient(180deg, rgba(238,247,255,1) 0%, rgba(248,251,255,1) 100%)"
                                     : undefined,
                                 borderColor: isSystem ? "#0d6efd" : undefined,
-                                boxShadow: isSystem ? "0 16px 40px rgba(13, 110, 253, 0.12)" : "none",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
                             };
+
                             const senderLabel = isSystem
                                 ? "SYSTEM"
                                 : isMine
@@ -191,14 +230,41 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
                                         : "User";
 
                             return (
-                                <div key={m.id || Math.random()} className={`d-flex ${containerClass} mb-2`}>
+                                <div
+                                    key={m.id || Math.random()}
+                                    className={`d-flex ${containerClass} mb-3 width-100`}
+                                >
                                     <div
-                                        className={`p-3 rounded-4 ${bubbleClass}`}
+                                        className={`p-2 px-3 rounded-3 ${bubbleClass} d-flex flex-column`}
                                         style={bubbleStyle}
                                     >
-                                        <div className="small text-muted mb-2">{senderLabel}</div>
-                                        <div>{m.message}</div>
-                                        <div className="small text-muted mt-2">{m.created_at ? new Date(m.created_at).toLocaleString() : ""}</div>
+                                        <div 
+                                            className="mb-1 fw-bold" 
+                                            style={{ 
+                                                fontSize: "11px", 
+                                                opacity: isMine ? 0.85 : 0.6,
+                                                textAlign: isSystem ? "center" : "left" 
+                                            }}
+                                        >
+                                            {senderLabel}
+                                        </div>
+
+                                        <div style={{ fontSize: "14px", lineHeight: "1.4" }}>
+                                            {m.message}
+                                        </div>
+
+                                        <div 
+                                            className="mt-1 text-end" 
+                                            style={{ 
+                                                fontSize: "10px", 
+                                                opacity: isMine ? 0.75 : 0.5,
+                                                minWidth: "100px"
+                                            }}
+                                        >
+                                            {m.created_at
+                                                ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                : ""}
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -206,15 +272,41 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
                     )}
                 </div>
 
-                <div className="d-flex gap-2">
+                {/* Input Controls */}
+                <div
+                    className="d-flex gap-2 pt-1 flex-shrink-0"
+                    style={{
+                        width: "100%",
+                        alignItems: "center",
+                    }}
+                >
                     <input
-                        className="form-control"
+                        className="form-control shadow-none"
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Type a message..."
-                        onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                sendMessage();
+                            }
+                        }}
+                        style={{
+                            flex: 1,
+                            minWidth: 0,
+                        }}
                     />
-                    <button className="btn btn-primary" onClick={sendMessage} disabled={sending || !text.trim()}>{sending ? 'Sending...' : 'Send'}</button>
+
+                    <button
+                        className="btn btn-primary px-3"
+                        onClick={sendMessage}
+                        disabled={sending || !text.trim()}
+                        style={{
+                            flexShrink: 0,
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {sending ? "Sending..." : "Send"}
+                    </button>
                 </div>
             </div>
         </div>
