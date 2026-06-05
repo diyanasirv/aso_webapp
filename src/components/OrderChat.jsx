@@ -92,10 +92,7 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
         if (!text.trim() || !orderId) return;
         setSending(true);
 
-        const {
-            data: { user },
-            error: userError,
-        } = await getUserWithRetry();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
 
         if (userError || !user) {
             alert("You must be logged in to send messages.");
@@ -110,6 +107,16 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
             sender_role: senderRole,
             message: text.trim(),
         };
+
+        let userRes;
+        try {
+            userRes = await getUserWithRetry();
+        } catch (e) {
+            console.error("Auth getUser failed after retries:", e);
+            alert("You must be logged in to send messages.");
+            setSending(false);
+            return;
+        }
 
         const { data, error } = await supabase.from("order_chats").insert(payload).select("*");
 
@@ -131,7 +138,7 @@ export default function OrderChat({ orderId, orderNumber, participantName, onClo
 
     return (
         <div
-            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-end"
+            className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
             style={{ zIndex: 9999, pointerEvents: "auto" }}
         >
             <div className="bg-white rounded shadow p-3" style={{ width: "100%", maxWidth: 720, maxHeight: "80vh" }}>
