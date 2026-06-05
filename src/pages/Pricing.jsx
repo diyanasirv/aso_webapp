@@ -30,7 +30,7 @@ function Pricing() {
             .select(`
 id,
 name,
-packages(name, price, min_quantity, max_quantity)
+packages(name, price)
 `)
             .eq("is_active", true)
             .order("created_at", { ascending: true });
@@ -63,8 +63,7 @@ packages(name, price, min_quantity, max_quantity)
                                                 <tr>
                                                     <th>Package</th>
                                                     <th>Price</th>
-                                                    <th>Min</th>
-                                                    <th>Max</th>
+                                                
                                                 </tr>
                                             </thead>
 
@@ -73,8 +72,7 @@ packages(name, price, min_quantity, max_quantity)
                                                     <tr key={pkg.name}>
                                                         <td>{pkg.name}</td>
                                                         <td>${pkg.price}</td>
-                                                        <td>{pkg.min_quantity}</td>
-                                                        <td>{pkg.max_quantity}</td>
+                                                        
                                                     </tr>
                                                 ))}
                                             </tbody>

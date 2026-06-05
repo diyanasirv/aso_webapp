@@ -141,9 +141,75 @@ function Signup() {
                     required
                   >
                     <option value="">Select Country</option>
+
+                    {/* North America */}
+                    <option value="United States">United States</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Mexico">Mexico</option>
+
+                    {/* Europe */}
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Italy">Italy</option>
+                    <option value="Spain">Spain</option>
+                    <option value="Netherlands">Netherlands</option>
+                    <option value="Belgium">Belgium</option>
+                    <option value="Switzerland">Switzerland</option>
+                    <option value="Austria">Austria</option>
+                    <option value="Ireland">Ireland</option>
+                    <option value="Sweden">Sweden</option>
+                    <option value="Norway">Norway</option>
+                    <option value="Denmark">Denmark</option>
+                    <option value="Finland">Finland</option>
+                    <option value="Poland">Poland</option>
+                    <option value="Portugal">Portugal</option>
+                    <option value="Czech Republic">Czech Republic</option>
+                    <option value="Greece">Greece</option>
+
+                    {/* Asia */}
                     <option value="India">India</option>
-                    <option value="UAE">UAE</option>
+                    <option value="China">China</option>
+                    <option value="Japan">Japan</option>
+                    <option value="South Korea">South Korea</option>
+                    <option value="Singapore">Singapore</option>
+                    <option value="Malaysia">Malaysia</option>
+                    <option value="Indonesia">Indonesia</option>
+                    <option value="Thailand">Thailand</option>
+                    <option value="Vietnam">Vietnam</option>
+                    <option value="Philippines">Philippines</option>
+                    <option value="Pakistan">Pakistan</option>
+                    <option value="Bangladesh">Bangladesh</option>
+                    <option value="Sri Lanka">Sri Lanka</option>
+
+                    {/* Middle East */}
+                    <option value="United Arab Emirates">United Arab Emirates</option>
+                    <option value="Saudi Arabia">Saudi Arabia</option>
                     <option value="Qatar">Qatar</option>
+                    <option value="Kuwait">Kuwait</option>
+                    <option value="Oman">Oman</option>
+                    <option value="Bahrain">Bahrain</option>
+                    <option value="Jordan">Jordan</option>
+                    <option value="Israel">Israel</option>
+
+                    {/* Oceania */}
+                    <option value="Australia">Australia</option>
+                    <option value="New Zealand">New Zealand</option>
+
+                    {/* Africa */}
+                    <option value="South Africa">South Africa</option>
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="Kenya">Kenya</option>
+                    <option value="Egypt">Egypt</option>
+                    <option value="Morocco">Morocco</option>
+
+                    {/* South America */}
+                    <option value="Brazil">Brazil</option>
+                    <option value="Argentina">Argentina</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="Peru">Peru</option>
+                    <option value="other">Other</option>
                   </select>
                   <label>Country</label>
                 </div>

@@ -16,7 +16,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import Landing from "./pages/Landing";
 import Payment from "./pages/Payment";
 import AdminPayments from "./pages/admin/AdminPayments";
-
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 function App() {
   return (
     <BrowserRouter>
@@ -105,7 +106,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-      </Routes>
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />aaaaaa      </Routes>
     </BrowserRouter>
   );
 }
