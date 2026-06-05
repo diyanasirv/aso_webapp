@@ -21,10 +21,9 @@ function Login() {
 
     if (error) {
       setLoading(false);
-      alert(error.message);
+      alert("Invalid email or password.");
       return;
     }
-
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")

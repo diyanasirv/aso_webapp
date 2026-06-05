@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase, getUserWithRetry } from "../supabaseClient";
 import {
   FiHome,
   FiPlusCircle,
@@ -28,7 +28,7 @@ function Sidebar() {
   async function loadProfile() {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getUserWithRetry();
 
     if (!user) return;
 
@@ -109,6 +109,14 @@ function Sidebar() {
           >
             <FiHome /> Dashboard
           </Link>
+          <Link
+            className={isActive("/services")}
+            to="/services"
+            onClick={closeSidebar}
+          >
+            <FiDollarSign /> Services
+          </Link>
+
 
           <Link
             className={isActive("/add-order")}
@@ -126,15 +134,7 @@ function Sidebar() {
             <FiList /> Orders
           </Link>
 
-          <Link
-            className={isActive("/pricing")}
-            to="/pricing"
-            onClick={closeSidebar}
-          >
-            <FiDollarSign /> Pricing
-          </Link>
 
-        
 
           <Link
             className={isActive("/terms")}

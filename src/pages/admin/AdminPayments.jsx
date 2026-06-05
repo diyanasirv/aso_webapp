@@ -35,7 +35,8 @@ function AdminPayments() {
     setLoading(true);
     setFetchError(null);
 
-    const { data, error } = await supabase
+    // 1) fetch actual payment records
+    const { data: paymentData, error: paymentError } = await supabase
       .from("payments")
       .select(`
         *,
@@ -43,13 +44,51 @@ function AdminPayments() {
       `)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching payments:", error);
-      setFetchError(error.message);
+    if (paymentError) {
+      console.error("Error fetching payments:", paymentError);
+      setFetchError(paymentError.message);
       setPayments([]);
-    } else {
-      setPayments(data || []);
+      setLoading(false);
+      return;
     }
+
+    const paymentsList = paymentData || [];
+
+    // 2) fetch orders that have not had payment proof submitted yet
+    const { data: pendingOrders } = await supabase
+      .from("orders")
+      .select(`
+        id, order_number, user_id, email, price, created_at,
+        profiles(full_name,email)
+      `)
+      .in("payment_status", ["pending", "payment_pending"])
+      .order("created_at", { ascending: false });
+
+    // 3) for any pending order that has NO payment record, add a placeholder row
+    const combined = [...paymentsList];
+
+    (pendingOrders || []).forEach((ord) => {
+      const exists = paymentsList.some(
+        (p) => p.order_id === ord.id || p.order_number === ord.order_number
+      );
+
+      if (!exists) {
+        combined.push({
+          id: `order-${ord.id}`,
+          order_id: ord.id,
+          order_number: ord.order_number,
+          profiles: ord.profiles,
+          email: ord.email,
+          amount: ord.price,
+          payment_method: null,
+          status: "not_submitted",
+          proof_url: null,
+          created_at: ord.created_at,
+        });
+      }
+    });
+
+    setPayments(combined || []);
 
     setLoading(false);
   };
@@ -104,7 +143,7 @@ function AdminPayments() {
                     <td>{p.order_number}</td>
                     <td>{p.profiles?.full_name || "N/A"}</td>
                     <td>{p.profiles?.email || "N/A"}</td>
-                    <td>₹{p.amount}</td>
+                    <td>${p.amount}</td>
                     <td>{p.payment_method}</td>
 
                     {/* STATUS */}
@@ -112,17 +151,21 @@ function AdminPayments() {
                       <span
                         className={`badge ${
                           p.status === "confirmed"
-                            ? "bg-success"
-                            : p.status === "pending"
-                            ? "bg-warning text-dark"
-                            : p.status === "under_review"
-                            ? "bg-info text-dark"
-                            : p.status === "rejected"
-                            ? "bg-danger"
-                            : "bg-secondary"
+                              ? "bg-success"
+                              : p.status === "pending"
+                              ? "bg-warning text-dark"
+                              : p.status === "under_review"
+                              ? "bg-info text-dark"
+                              : p.status === "rejected"
+                              ? "bg-danger"
+                              : p.status === "not_submitted"
+                              ? "bg-secondary text-dark"
+                              : "bg-secondary"
                         }`}
                       >
-                        {p.status?.replaceAll("_", " ").toUpperCase()}
+                          {p.status === "not_submitted"
+                            ? "PAYMENT NOT COMPLETED"
+                            : p.status?.replaceAll("_", " ").toUpperCase()}
                       </span>
                     </td>
 

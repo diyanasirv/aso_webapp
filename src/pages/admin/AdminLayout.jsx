@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import { supabase, getUserWithRetry } from "../../supabaseClient";
 import {
   FiHome,
   FiList,
@@ -7,9 +7,42 @@ import {
   FiCreditCard,
   FiLogOut,
 } from "react-icons/fi";
+import { useEffect } from "react";
+import { useState } from "react";
 
 function AdminLayout() {
   const navigate = useNavigate();
+
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+      async function checkAdmin() {
+      const {
+        data: { user },
+      } = await getUserWithRetry();
+
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (error || profile?.role?.toLowerCase() !== "admin") {
+        alert("Admin only");
+        navigate("/dashboard");
+        return;
+      }
+
+      setChecking(false);
+    }
+
+    checkAdmin();
+  }, [navigate]);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -17,6 +50,9 @@ function AdminLayout() {
   }
 
   return (
+    checking ? (
+      <div className="p-4">Checking admin...</div>
+    ) : (
     <div className="d-flex min-vh-100">
 
       {/* Sidebar */}
@@ -60,6 +96,7 @@ function AdminLayout() {
       </div>
 
     </div>
+    )
   );
 }
 

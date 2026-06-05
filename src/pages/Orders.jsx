@@ -1,33 +1,67 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { supabase, getUserWithRetry } from "../supabaseClient";
 import Sidebar from "../components/Sidebar";
 
 import {
   FiPlusCircle,
   FiPackage,
   FiEye,
+  FiMessageCircle,
   FiUpload,
 } from "react-icons/fi";
+import OrderChat from "../components/OrderChat";
 
 function Orders() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [chatOrder, setChatOrder] = useState(null);
+  const [newMessages, setNewMessages] = useState({});
   const [paymentFile, setPaymentFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [userId, setUserId] = useState(null);
+  const currentUserIdRef = useRef(null);
 
   useEffect(() => {
-    let channel;
+    currentUserIdRef.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    const chatId = searchParams.get("chat");
+    if (!chatId || orders.length === 0) return;
+
+    const orderToOpen = orders.find((order) => String(order.id) === chatId);
+    if (orderToOpen) {
+      setChatOrder(orderToOpen);
+      localStorage.setItem(`chat_opened_order_${orderToOpen.id}`, new Date().toISOString());
+      try {
+        const objRaw = sessionStorage.getItem("chat_alerted_session_orders");
+        const obj = objRaw ? JSON.parse(objRaw) : {};
+        obj[orderToOpen.id] = Date.now();
+        sessionStorage.setItem("chat_alerted_session_orders", JSON.stringify(obj));
+      } catch (e) {
+        // ignore
+      }
+      setNewMessages((prev) => ({
+        ...prev,
+        [orderToOpen.id]: false,
+      }));
+    }
+  }, [orders, searchParams]);
+
+  useEffect(() => {
+    let orderChannel;
+    let chatChannel;
 
     async function setupOrders() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getUserWithRetry();
 
       if (!user) {
         navigate("/login");
@@ -37,26 +71,56 @@ function Orders() {
       setUserId(user.id);
       await loadOrders(user.id);
 
-      channel = supabase
-        .channel("orders-user-realtime")
-        .on(
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("user_id", user.id);
+
+      const orderIds = (orders || []).map((order) => order.id).filter(Boolean);
+
+      orderChannel = supabase.channel(`orders-user-realtime-${Date.now()}`);
+      orderChannel.on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => loadOrders(user.id)
+      );
+      await orderChannel.subscribe();
+
+      if (orderIds.length > 0) {
+        chatChannel = supabase.channel(`order-chat-notify-${Date.now()}`);
+        chatChannel.on(
           "postgres_changes",
           {
-            event: "*",
+            event: "INSERT",
             schema: "public",
-            table: "orders",
-            filter: `user_id=eq.${user.id}`,
+            table: "order_chats",
+            filter: `order_id=in.(${orderIds.join(",")})`,
           },
-          () => loadOrders(user.id)
-        )
-        .subscribe();
+          (payload) => {
+            if (payload.new.sender_id === currentUserIdRef.current) return;
+            setNewMessages((prev) => ({
+              ...prev,
+              [payload.new.order_id]: true,
+            }));
+          }
+        );
+        await chatChannel.subscribe();
+      }
     }
 
     setupOrders();
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (orderChannel) {
+        supabase.removeChannel(orderChannel);
+      }
+      if (chatChannel) {
+        supabase.removeChannel(chatChannel);
       }
     };
   }, [navigate]);
@@ -105,6 +169,10 @@ function Orders() {
     if (status === "rejected") return "bg-danger";
     if (status === "under_review") return "bg-secondary";
     return "bg-secondary";
+  }
+
+  function shouldShowCompletePayment(order) {
+    return order.status === "payment_pending" || order.payment_status === "pending";
   }
 
 
@@ -220,7 +288,7 @@ function Orders() {
                     <th>Package</th>
                     <th>Payment Status</th>
                     <th>Order Status</th>
-                    <th>Details</th>
+                    <th>More Details</th>
                   </tr>
                 </thead>
 
@@ -257,13 +325,23 @@ function Orders() {
                       </td>
 
                       <td>
-                        <span
-                          className={`badge ${paymentBadge(
-                            order.payment_status
-                          )}`}
-                        >
-                          {order.payment_status}
-                        </span>
+                        {shouldShowCompletePayment(order) ? (
+                          <div className="d-flex flex-column gap-2">
+                            <span className={`badge ${paymentBadge(order.payment_status)}`}>
+                              {order.payment_status}
+                            </span>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => navigate(`/payment/${order.id}`)}
+                            >
+                              Complete Payment
+                            </button>
+                          </div>
+                        ) : (
+                          <span className={`badge ${paymentBadge(order.payment_status)}`}>
+                            {order.payment_status}
+                          </span>
+                        )}
                       </td>
 
                       <td>
@@ -273,14 +351,38 @@ function Orders() {
                       </td>
 
                       <td>
-
                         <button
-                          className="btn btn-sm btn-outline-success"
-                          onClick={() => setSelectedOrder(order)}
+                          className="btn btn-sm btn-outline-success d-flex align-items-center gap-2"
+                          onClick={() => {
+                            setChatOrder(order);
+                            localStorage.setItem(`chat_opened_order_${order.id}`, new Date().toISOString());
+                            try {
+                              const objRaw = sessionStorage.getItem("chat_alerted_session_orders");
+                              const obj = objRaw ? JSON.parse(objRaw) : {};
+                              obj[order.id] = Date.now();
+                              sessionStorage.setItem("chat_alerted_session_orders", JSON.stringify(obj));
+                            } catch (e) {
+                              // ignore
+                            }
+                            setNewMessages((prev) => ({
+                              ...prev,
+                              [order.id]: false,
+                            }));
+                          }}
                         >
-                          <FiEye />
+                          <FiMessageCircle className="me-1" />
+                          <span>Open Chat</span>
+                          {newMessages[order.id] && (
+                            <span
+                              className="ms-2 d-inline-flex align-items-center justify-content-center rounded-pill bg-danger text-white px-2"
+                              style={{ height: 22, fontSize: 12, gap: 4 }}
+                              title="New message"
+                            >
+                              <FiMessageCircle size={12} className="text-white" />
+                              New
+                            </span>
+                          )}
                         </button>
-
                       </td>
                     </tr>
                   ))}
@@ -290,80 +392,12 @@ function Orders() {
           </div>
         )}
 
-        {selectedOrder && (
-          <div className="custom-modal">
-            <div className="modal-box order-modal">
-
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="fw-bold mb-0">Order Details</h5>
-
-                <div className="d-flex gap-2">
-                  {/* Invoice button */}
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => setShowInvoice(true)}
-                  >
-                    Invoice
-                  </button>
-
-                  {/* Close button */}
-                  <button
-                    className="btn btn-outline-danger btn-sm"
-                    onClick={() => setSelectedOrder(null)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div className="detail-row">
-                <span>Order ID</span>
-                <strong>#{selectedOrder.id.slice(0, 8)}</strong>
-              </div>
-
-              <div className="detail-row">
-                <span>App Name</span>
-                <strong>{selectedOrder.app_name}</strong>
-              </div>
-
-              <div className="detail-row">
-                <span>Service</span>
-                <strong>{selectedOrder.services?.name || "-"}</strong>
-              </div>
-
-              <div className="detail-row">
-                <span>Package</span>
-                <strong>{selectedOrder.packages?.name || "-"}</strong>
-              </div>
-
-
-              <div className="detail-row">
-                <span>Total Price</span>
-                <strong>${selectedOrder.price}</strong>
-              </div>
-
-              <div className="detail-row">
-                <span>Status</span>
-                <span className={`badge ${statusBadge(selectedOrder.status)}`}>
-                  {selectedOrder.status === "payment_pending" ? "pending" : selectedOrder.status}
-                </span>
-              </div>
-
-              <div className="detail-row">
-                <span>Payment</span>
-                <span className={`badge ${paymentBadge(selectedOrder.payment_status)}`}>
-                  {selectedOrder.payment_status}
-                </span>
-              </div>
-
-              <div className="mt-3">
-                <small className="text-muted">
-                  Invoice will show payment details and order summary.
-                </small>
-              </div>
-
-            </div>
-          </div>
+        {chatOrder && (
+          <OrderChat
+            orderId={chatOrder.id}
+            orderNumber={chatOrder.order_number}
+            onClose={() => setChatOrder(null)}
+          />
         )}
       </main>
     </div>

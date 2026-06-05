@@ -1,6 +1,6 @@
 // src/pages/Payment.jsx
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase, getUserWithRetry } from "../supabaseClient";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
@@ -40,7 +40,7 @@ function Payment() {
   async function loadData() {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getUserWithRetry();
 
     if (!user) {
       navigate("/login");
@@ -115,7 +115,7 @@ function Payment() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getUserWithRetry();
 
     const fileExt = proofFile.name.split(".").pop();
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;

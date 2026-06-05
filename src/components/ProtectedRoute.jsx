@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase, getUserWithRetry } from "../supabaseClient";
 import { useEffect, useState } from "react";
 
 function ProtectedRoute({ children }) {
@@ -13,7 +13,7 @@ function ProtectedRoute({ children }) {
   async function checkAccess() {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getUserWithRetry();
 
     if (!user) {
       setIsAllowed(false);

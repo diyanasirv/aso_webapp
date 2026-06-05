@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase, getUserWithRetry } from "../supabaseClient";
 import Sidebar from "../components/Sidebar";
 
 function Contact() {
@@ -13,7 +13,7 @@ function Contact() {
     async function loadProfile() {
         const {
             data: { user },
-        } = await supabase.auth.getUser();
+        } = await getUserWithRetry();
 
         if (!user) return;
 

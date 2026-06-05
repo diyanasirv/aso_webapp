@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase, getUserWithRetry } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { FiPackage, FiLink } from "react-icons/fi";
@@ -34,11 +34,9 @@ function AddOrder() {
   }, [selectedService]);
 
   async function loadInitialData() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await getUserWithRetry();
 
-    if (!user) {
+    if (authError || !user) {
       navigate("/login");
       return;
     }
@@ -92,50 +90,54 @@ function AddOrder() {
     : 0;
 
   async function handleCreateOrder() {
-    const { data: { user } } = await supabase.auth.getUser();
+    // 1. Double check auth verification on-the-fly
+    const { data: { user } } = await getUserWithRetry();
     if (!user) {
-      alert("User not logged in");
+      alert("Your session has expired. Please log in again.");
       navigate("/login");
       return;
     }
 
-    if (!appName || !appLink || !selectedService || !selectedPackage) {
-      alert("Please complete all order details");
+    // 2. Strict inputs trim sanitization validation
+    if (!appName.trim() || !appLink.trim() || !selectedService || !selectedPackage) {
+      alert("Please accurately complete all form spaces before placement.");
       return;
     }
 
     setSubmitting(true);
 
+    const payload = {
+      user_id: user.id,
+      email: user.email,
+      app_name: appName.trim(),
+      app_link: appLink.trim(),
+      service_id: selectedService,
+      package_id: selectedPackage,
+      price: totalPrice,
+      status: "payment_pending",
+      payment_status: "pending",
+    };
+
     const { data, error } = await supabase
       .from("orders")
-      .insert({
-        user_id: userId,
-        email: user.email,
-        app_name: appName,
-        app_link: appLink,
-        service_id: selectedService,
-        package_id: selectedPackage,
-        price: totalPrice,
-        status: "pending",
-        payment_status: "under_review",
-      })
+      .insert(payload)
       .select("id")
       .single();
 
     setSubmitting(false);
 
     if (error) {
-      alert(error.message);
-      console.log("Order insert error:", error);
+      alert(`Placement Failed: ${error.message}`);
+      console.error("Order insertion runtime breakdown:", error);
       return;
     }
 
     if (!data?.id) {
-      alert("Order created but payment redirect failed");
-      console.log("Inserted order data:", data);
+      alert("Order logged successfully, but internal identifier redirection layer timed out.");
       return;
     }
 
+    // Redirect to complete transaction invoice uploads
     navigate(`/payment/${data.id}`);
   }
 
@@ -161,7 +163,6 @@ function AddOrder() {
               <h5>Order Details</h5>
 
               <div className="row g-3">
-
                 {/* SERVICE SELECT */}
                 <div className="col-12">
                   <label className="form-label">Select Service</label>
@@ -184,10 +185,11 @@ function AddOrder() {
                   <div className="col-12">
                     <div className="p-3 bg-light rounded">
                       <h6 className="mb-1">Service Description</h6>
-                      <p className="mb-0 text-muted"
-                        style={{ whiteSpace: "pre-line" }}>
-                        {selectedServiceData.description ||
-                          "No description available"}
+                      <p
+                        className="mb-0 text-muted"
+                        style={{ whiteSpace: "pre-line" }}
+                      >
+                        {selectedServiceData.description || "No description available"}
                       </p>
                     </div>
                   </div>
@@ -231,11 +233,8 @@ function AddOrder() {
                     disabled={!selectedService}
                   >
                     <option value="">
-                      {selectedService
-                        ? "Select package"
-                        : "Choose service first"}
+                      {selectedService ? "Select package" : "Choose service first"}
                     </option>
-
                     {packages.map((pkg) => (
                       <option key={pkg.id} value={pkg.id}>
                         {pkg.name} — ${pkg.price}
@@ -243,7 +242,6 @@ function AddOrder() {
                     ))}
                   </select>
                 </div>
-
               </div>
             </div>
           </div>
@@ -266,9 +264,7 @@ function AddOrder() {
               <div className="summary-row">
                 <span>Price</span>
                 <strong>
-                  {selectedPackageData
-                    ? `$${selectedPackageData.price}`
-                    : "-"}
+                  {selectedPackageData ? `$${selectedPackageData.price}` : "-"}
                 </strong>
               </div>
 

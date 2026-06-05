@@ -9,7 +9,7 @@ import Orders from "./pages/Orders";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import Pricing from "./pages/Pricing";
+import Services from "./pages/Services";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -71,10 +71,10 @@ function App() {
         />
 
         <Route
-          path="/pricing"
+          path="/services"
           element={
             <ProtectedRoute>
-              <Pricing />
+              <Services />
             </ProtectedRoute>
           }
         />

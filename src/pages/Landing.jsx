@@ -4,42 +4,127 @@ import { supabase } from "../supabaseClient";
 
 /* ─── tokens ─────────────────────────────────────────── */
 const C = {
-  brand:       "#4338ca",
-  brandHover:  "#3730a3",
-  brandLight:  "#ede9fe",
+  brand: "#4338ca",
+  brandHover: "#3730a3",
+  brandLight: "#ede9fe",
   brandBorder: "#c4b5fd",
-  brandMid:    "#5b21b6",
-  surface:     "#f5f3ff",
-  white:       "#ffffff",
-  ink:         "#1a1a2e",
-  muted:       "#6b7280",
-  hint:        "#9ca3af",
-  border:      "#e5e7eb",
+  brandMid: "#5b21b6",
+  surface: "#f5f3ff",
+  white: "#ffffff",
+  ink: "#1a1a2e",
+  muted: "#6b7280",
+  hint: "#9ca3af",
+  border: "#e5e7eb",
   borderFaint: "#f3f4f6",
 };
 
 /* ─── static content ─────────────────────────────────── */
 const SERVICES = [
-  { icon: "★", name: "App Reviews",   desc: "Genuine written reviews from verified users that lift your store credibility." },
-  { icon: "◆", name: "App Ratings",   desc: "Push your star rating higher with real, organic submissions from authentic devices." },
-  { icon: "↓", name: "App Installs",  desc: "Drive install volume that signals quality to the algorithm and climbs store ranking." },
-  { icon: "⌖", name: "Keyword Boost", desc: "Target high-intent search terms and climb positions that convert browsers to installers." },
+
+  {
+    icon: "🧪",
+    name: "Real Users Testing",
+    desc: "Get comprehensive testing from real users across various devices with usability insights, bug reports, and improvement suggestions."
+  },
+  {
+    icon: "📸",
+    name: "Instagram Management",
+    desc: "Grow your social media presence with profile optimization, content management, audience engagement, and strategic growth planning."
+  },
+  {
+    icon: "💬",
+    name: "User Feedback & Reviews",
+    desc: "Receive authentic user feedback and detailed reviews to improve user experience, identify issues, and build trust for your app."
+  },
+  {
+    icon: "🎨",
+    name: "Videos & Posters",
+    desc: "Professional promotional videos, posters, and creative marketing assets designed to attract users and improve conversion rates."
+  },
+  {
+    icon: "🌐",
+    name: "Landing Page Website",
+    desc: "Professional, conversion-focused landing pages designed to showcase your app, increase engagement, and drive more downloads."
+  },
+  {
+    icon: "📲",
+    name: "App Installations",
+    desc: "Boost your app's visibility and reach through installation campaigns that help improve marketplace performance and user acquisition."
+  },
+  {
+    icon: "🎥",
+    name: "Video Outreach Campaign",
+    desc: "Promote your app through targeted video campaigns that increase brand awareness, audience engagement, and app discovery."
+  },
+
+
+
 ];
 
 const FALLBACK_PACKAGES = [
-  { id: 1, name: "Basic Boost",   quantity: "100 installs",   price: 29,  tag: "Starter",      featured: false },
-  { id: 2, name: "Growth Pack",   quantity: "500 installs",   price: 99,  tag: "Most Popular", featured: true  },
-  { id: 3, name: "Review Bundle", quantity: "50 reviews",     price: 79,  tag: "Reviews",      featured: false },
-  { id: 4, name: "Rating Push",   quantity: "200 ratings",    price: 49,  tag: "Ratings",      featured: false },
-  { id: 5, name: "Keyword Climb", quantity: "10 keywords",    price: 149, tag: "Keywords",     featured: false },
-  { id: 6, name: "Scale Bundle",  quantity: "2,000 installs", price: 349, tag: "Enterprise",   featured: false },
+  {
+    id: 1,
+    name: "20 Users",
+    quantity: "Real Users Testing",
+    price: 80,
+    tag: "Testing",
+    featured: true,
+  },
+  {
+    id: 2,
+    name: "Pro Instagram",
+    quantity: "Instagram Management",
+    price: 240,
+    tag: "Popular",
+    featured: false,
+  },
+  {
+    id: 3,
+    name: "2 Videos + 5 Posters",
+    quantity: "Videos & Posters",
+    price: 25,
+    tag: "Creative",
+    featured: true,
+  },
+  
+  
+  {
+    id: 4,
+    name: "50 Reviews",
+    quantity: "User Feedback & Reviews",
+    price: 65,
+    tag: "Reviews",
+    featured: false,
+  },
+  {
+    id: 5,
+    name: "Pro Landing Page",
+    quantity: "Landing Page Website",
+    price: 180,
+    tag: "Premium",
+    featured: true,
+  },
+  {
+    id: 6,
+    name: "500 Installs",
+    quantity: "App Installations",
+    price: 50,
+    tag: "Popular",
+    featured: false,
+  },
+  
+  
+  
+  
+  
+  
 ];
 
 const TRUST = [
-  { icon: "⚡", title: "Fast Delivery",   sub: "Orders start in 24h" },
-  { icon: "✦",  title: "Real Users",      sub: "No bots, ever"       },
-  { icon: "🔒", title: "Secure Payments", sub: "Encrypted checkout"  },
-  { icon: "↑",  title: "Growth Focused",  sub: "Sustainable results" },
+  { icon: "⚡", title: "Fast Delivery", sub: "Orders start in 24h" },
+  { icon: "✦", title: "Real Users", sub: "No bots, ever" },
+  { icon: "🔒", title: "Secure Payments", sub: "Encrypted checkout" },
+  { icon: "↑", title: "Growth Focused", sub: "Sustainable results" },
 ];
 
 /* ─── responsive hook ────────────────────────────────── */
@@ -57,18 +142,18 @@ function useIsMobile() {
 
 /* ─── component ──────────────────────────────────────── */
 export default function Landing() {
-  const navigate  = useNavigate();
-  const isMobile  = useIsMobile();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [packages, setPackages] = useState([]);
-  const [hovered,  setHovered]  = useState(null);
+  const [hovered, setHovered] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!document.querySelector("#aso-fonts")) {
       const link = document.createElement("link");
-      link.id    = "aso-fonts";
-      link.rel   = "stylesheet";
-      link.href  = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap";
+      link.id = "aso-fonts";
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,400&display=swap";
       document.head.appendChild(link);
     }
     loadPackages();
@@ -91,9 +176,9 @@ export default function Landing() {
     ? packages.map((p) => ({ ...p, tag: p.services?.name || "", featured: false }))
     : FALLBACK_PACKAGES;
 
-  const hov    = (id) => ({ onMouseEnter: () => setHovered(id), onMouseLeave: () => setHovered(null) });
-  const isHov  = (id) => hovered === id;
-  const px     = isMobile ? "20px" : "48px";
+  const hov = (id) => ({ onMouseEnter: () => setHovered(id), onMouseLeave: () => setHovered(null) });
+  const isHov = (id) => hovered === id;
+  const px = isMobile ? "20px" : "48px";
 
   /* ── static base styles ── */
   const S = {
@@ -127,7 +212,7 @@ export default function Landing() {
     trustL: { fontSize: 11, color: C.hint, marginTop: 1 },
 
     /* sections */
-    sec:      { padding: isMobile ? "48px 20px" : "80px 48px" },
+    sec: { padding: isMobile ? "48px 20px" : "80px 48px" },
     secLabel: { fontSize: 11, textTransform: "uppercase", letterSpacing: "2px", color: "#7c3aed", fontWeight: 700, marginBottom: 8 },
     secTitle: { fontFamily: "'Fraunces', serif", fontSize: isMobile ? 28 : 38, fontWeight: 700, letterSpacing: "-1.5px", color: C.ink, marginBottom: isMobile ? 24 : 40, lineHeight: 1.1 },
 
@@ -139,21 +224,21 @@ export default function Landing() {
 
     /* pricing */
     pricingSec: { padding: isMobile ? "48px 20px" : "80px 48px", background: C.surface },
-    pkgGrid:    { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14 },
+    pkgGrid: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 14 },
     pkgTagBase: { fontSize: 10, textTransform: "uppercase", letterSpacing: "1.5px", color: C.hint, fontWeight: 600, marginBottom: 10 },
-    pkgTagHot:  { display: "inline-block", background: C.brandLight, color: C.brandMid, borderRadius: 6, padding: "3px 10px", fontSize: 10, textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 10 },
-    pkgName:    { fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: C.ink, letterSpacing: "-0.5px", marginBottom: 4 },
-    pkgQty:     { fontSize: 13, color: C.hint, marginBottom: 18 },
-    pkgPrice:   { fontFamily: "'Fraunces', serif", fontSize: 42, fontWeight: 700, color: C.brand, letterSpacing: "-2px", lineHeight: 1, marginBottom: 20 },
-    pkgPriceSup:{ fontSize: 19, verticalAlign: "top", marginTop: 9, letterSpacing: 0 },
+    pkgTagHot: { display: "inline-block", background: C.brandLight, color: C.brandMid, borderRadius: 6, padding: "3px 10px", fontSize: 10, textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, marginBottom: 10 },
+    pkgName: { fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: C.ink, letterSpacing: "-0.5px", marginBottom: 4 },
+    pkgQty: { fontSize: 13, color: C.hint, marginBottom: 18 },
+    pkgPrice: { fontFamily: "'Fraunces', serif", fontSize: 42, fontWeight: 700, color: C.brand, letterSpacing: "-2px", lineHeight: 1, marginBottom: 20 },
+    pkgPriceSup: { fontSize: 19, verticalAlign: "top", marginTop: 9, letterSpacing: 0 },
 
     /* cta */
     ctaBanner: { margin: isMobile ? "0 20px 48px" : "0 48px 80px", borderRadius: 18, background: C.brand, padding: isMobile ? "36px 24px" : "52px 48px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 20 : 24 },
-    ctaTitle:   { fontFamily: "'Fraunces', serif", fontSize: isMobile ? 26 : 34, fontWeight: 700, color: C.white, letterSpacing: "-1.5px", lineHeight: 1.15 },
-    ctaSub:     { fontSize: 14, color: "rgba(255,255,255,0.65)", marginTop: 8 },
+    ctaTitle: { fontFamily: "'Fraunces', serif", fontSize: isMobile ? 26 : 34, fontWeight: 700, color: C.white, letterSpacing: "-1.5px", lineHeight: 1.15 },
+    ctaSub: { fontSize: 14, color: "rgba(255,255,255,0.65)", marginTop: 8 },
 
     /* footer */
-    footer:     { borderTop: `1px solid ${C.borderFaint}`, padding: `18px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: C.white },
+    footer: { borderTop: `1px solid ${C.borderFaint}`, padding: `18px ${px}`, display: "flex", alignItems: "center", justifyContent: "space-between", background: C.white },
     footerLogo: { fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 700, color: C.brand },
     footerCopy: { fontSize: 12, color: "#d1d5db" },
   };
@@ -198,7 +283,7 @@ export default function Landing() {
 
   const pkgCardStyle = (pkg) => {
     const feat = pkg.featured || pkg.tag === "Most Popular";
-    const h    = isHov(`pkg-${pkg.id}`);
+    const h = isHov(`pkg-${pkg.id}`);
     return {
       background: C.white,
       border: feat ? `2px solid ${C.brand}` : `1.5px solid ${h ? "#a5b4fc" : C.border}`,
@@ -210,7 +295,7 @@ export default function Landing() {
 
   const btnPkgStyle = (pkg) => {
     const feat = pkg.featured || pkg.tag === "Most Popular";
-    const h    = isHov(`order-${pkg.id}`);
+    const h = isHov(`order-${pkg.id}`);
     return {
       width: "100%",
       background: feat ? (h ? C.brandHover : C.brand) : (h ? C.brand : C.surface),
@@ -258,7 +343,7 @@ export default function Landing() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button style={btnOutline("login")}  {...hov("login")}  onClick={() => navigate("/login")}>Login</button>
+                <button style={btnOutline("login")}  {...hov("login")} onClick={() => navigate("/login")}>Login</button>
                 <button style={btnSolid("signup")} {...hov("signup")} onClick={() => navigate("/signup")}>Sign Up</button>
               </div>
             </>
@@ -274,7 +359,7 @@ export default function Landing() {
               </a>
             ))}
             <div style={S.mobileBtns}>
-              <button style={{ ...btnOutline("m-login"),  flex: 1 }} onClick={() => navigate("/login")}>Login</button>
+              <button style={{ ...btnOutline("m-login"), flex: 1 }} onClick={() => navigate("/login")}>Login</button>
               <button style={{ ...btnSolid("m-signup"), flex: 1 }} onClick={() => navigate("/signup")}>Sign Up</button>
             </div>
           </div>
@@ -293,8 +378,7 @@ export default function Landing() {
                 <em style={{ fontStyle: "italic", color: C.brand }}>Faster.</em>
               </h1>
               <p style={S.heroSub}>
-                Real installs, genuine ratings, and keyword boosts from authentic users — built for sustainable, long-term growth.
-              </p>
+Everything your app needs to increase visibility, attract users, improve credibility, and achieve sustainable growth              </p>
               <div style={S.heroCtas}>
                 <button style={btnHeroPrimary("cta-start")} {...hov("cta-start")} onClick={handleOrderNow}>Get Started →</button>
                 <a href="#pricing" style={btnHeroGhost("cta-pricing")} {...hov("cta-pricing")}>View Pricing</a>
@@ -303,8 +387,8 @@ export default function Landing() {
 
             <div style={S.heroStats}>
               {[
-                { num: "98%",  lbl: "Satisfaction" },
-                { num: "24h",  lbl: "Delivery" },
+                { num: "98%", lbl: "Satisfaction" },
+                { num: "24h", lbl: "Delivery" },
                 { num: "12k+", lbl: "Orders delivered", wide: true },
               ].map((stat) => (
                 <div key={stat.lbl} style={{ ...S.statBox, ...(stat.wide ? { gridColumn: "1/-1" } : {}) }}>
